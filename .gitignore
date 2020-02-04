@@ -1,0 +1,9 @@
+fig/
+data/
+*.log
+*.pyc
+*.py~
+*.pdf
+*.tx
+*.dat
+*.root
