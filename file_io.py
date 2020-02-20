@@ -8,7 +8,11 @@ from ROOT import TFile, TTree, gROOT, AddressOf
 class file_io:
     #output from lgen
     #_____________________________________________________________________________
-    def __init__(self, nam):
+    def __init__(self, parse):
+
+        #name for the output file
+        nam = parse.get("lgen", "nam").strip("\"'")
+        print "Output name:", nam
 
         #lgen ascii output
         self.out = open(nam+"_evt.dat", "w")
@@ -43,6 +47,7 @@ class file_io:
         self.tree_out = rt.tree_out() # instance of the C structure
         self.ltree = TTree("ltree", "ltree")
         for i in tlist:
+            exec("self.tree_out."+i+"=0")
             self.ltree.Branch(i, AddressOf(self.tree_out, i), i+"/D")
 
         atexit.register(self.close)
@@ -81,6 +86,10 @@ class file_io:
 
         #tracks and vertex position in cm
         tracks_tx = []
+        vx = 0.
+        vy = 0.
+        vz = 0.
+        #tracks loop
         for t in tracks:
             #only final particles
             if t.stat != 1: continue
@@ -115,27 +124,38 @@ class file_io:
         self.tx_ievt += 1
 
     #_____________________________________________________________________________
-    def write_root(self, phot, el):
+    def write_root(self, tracks):
         #ROOT output for generated photon (phot) and electron (el)
 
         t = self.tree_out
 
-        t.phot_en    = phot.vec.Energy()
-        t.phot_eta   = phot.vec.Eta()
-        t.phot_phi   = phot.vec.Phi()
-        t.phot_theta = phot.vec.Theta()
-        t.phot_m     = phot.vec.M()
-        t.phot_px    = phot.vec.Px()
-        t.phot_py    = phot.vec.Py()
-        t.phot_pz    = phot.vec.Pz()
-        t.phot_vx    = phot.vx
-        t.phot_vy    = phot.vy
-        t.phot_vz    = phot.vz
+        for i in tracks:
+            #select the final photon and electron
+            if i.stat != 1: continue
 
-        t.el_en     = el.vec.Energy()
-        t.el_eta    = el.vec.Eta()
-        t.el_phi    = el.vec.Phi()
+            #final photon
+            if i.pdg == 22:
 
+                t.phot_en    = i.vec.Energy()
+                t.phot_eta   = i.vec.Eta()
+                t.phot_phi   = i.vec.Phi()
+                t.phot_theta = i.vec.Theta()
+                t.phot_m     = i.vec.M()
+                t.phot_px    = i.vec.Px()
+                t.phot_py    = i.vec.Py()
+                t.phot_pz    = i.vec.Pz()
+                t.phot_vx    = i.vx
+                t.phot_vy    = i.vy
+                t.phot_vz    = i.vz
+
+            #final electron
+            if i.pdg == 11:
+
+                t.el_en     = i.vec.Energy()
+                t.el_eta    = i.vec.Eta()
+                t.el_phi    = i.vec.Phi()
+
+        #fill the tree
         self.ltree.Fill()
 
     #_____________________________________________________________________________

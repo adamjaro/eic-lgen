@@ -9,6 +9,7 @@ from file_io import file_io
 
 from gen_h1 import gen_h1
 from gen_zeus import gen_zeus
+from gen_quasi_real import gen_quasi_real
 
 #_____________________________________________________________________________
 class event:
@@ -16,10 +17,13 @@ class event:
     #_____________________________________________________________________________
     def __init__(self, config):
 
+        #input configuration
         print "Generator configuration:", config
-
         parse = ConfigParser.RawConfigParser()
         parse.read(config)
+
+        #output from lgen
+        self.io = file_io(parse)
 
         #electron and proton beam, GeV
         self.Ee = parse.getfloat("lgen", "Ee")
@@ -27,31 +31,27 @@ class event:
         print "Ee =", self.Ee
         print "Ep =", self.Ep
 
-        #photon generator
-        par = parse.get("lgen", "par").strip("\"'")
-        emin = parse.getfloat("lgen", "emin")
-        print "emin =", emin
+        #physics generator
+        par = parse.get("lgen", "par").strip("\"'") # which parametrization to use
+        #select the parametrization
         if par == "h1":
-            self.gen = gen_h1(self.Ee, self.Ep, emin)
+            self.gen = gen_h1(self.Ee, self.Ep, parse)
         elif par == "zeus":
-            self.gen = gen_zeus(self.Ee, self.Ep, emin)
+            self.gen = gen_zeus(self.Ee, self.Ep, parse)
+        elif par == "quasi-real":
+            self.gen = gen_quasi_real(self.Ee, self.Ep, parse, self.io.ltree)
         else:
             print "Invalid generator specified"
             exit()
 
         #beam effects, also reads config file
-        self.beff = beam_effects(config)
+        self.beff = beam_effects(parse)
 
         #tracks in the event
         self.tracks = []
 
-        #output from lgen
-        nam = parse.get("lgen", "nam").strip("\"'")
-        print "Output name:", nam
-        self.io = file_io(nam)
-
         #run
-        nev = parse.getint("lgen", "nev")
+        nev = parse.getint("lgen", "nev") # number of events to generate
         print "Number of events:", nev
         self.event_loop(nev)
 
@@ -79,30 +79,28 @@ class event:
         intermediate.stat = 21 # mark as not final
         intermediate.pdg = 23 # away from photon pdg
 
-        #scattered electron, initialized as beam electron
-        electron = self.add_particle( beam(self.Ee, 11, -1) )
-        electron.stat = 1
-        electron.parent_id = 1
-        electron.pxyze_prec = 9
+        #run the physics generator
+        self.gen.generate(self.add_particle)
 
-        #Bethe-Heitler bremsstrahlung photon
-        en, theta, phi = self.gen.generate()
-        phot = self.add_particle( photon(en, theta, phi) )
-        phot.parent_id = 4
-        phot.pxyze_prec = 9 # increase kinematics precision for the photon
+        #relations between the final electron and photon
+        for i in self.tracks:
+            if i.stat != 1: continue
 
-        #apply beam effects to outgoing photon and electron
-        self.beff.apply(phot, electron)
+            #electron from the beam electron
+            if i.pdg == 11: i.parent_id = 1
 
-        #constrain scattered electron with the photon
-        electron.vec -= phot.vec
+            #photon from the outgoing electron
+            if i.pdg == 22: i.parent_id = 4
+
+        #apply the beam effects
+        self.beff.apply(self.tracks)
 
         #ascii event output
         self.io.write_dat(self.tracks)
         self.io.write_tx(self.tracks)
 
         #ROOT output for the photon and scattered electron
-        self.io.write_root(phot, electron)
+        self.io.write_root(self.tracks)
 
     #_____________________________________________________________________________
     def add_particle(self, part):

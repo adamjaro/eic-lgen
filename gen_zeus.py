@@ -1,12 +1,15 @@
 
 from ROOT import TDatabasePDG, TF1, TRandom3, gRandom, TMath
 
+from photon import photon
+from beam import beam
+
 #_____________________________________________________________________________
 class gen_zeus:
     #Bethe-Heitler bremsstrahlung photon according to ZEUS
     #Eur. Phys. J. C (2011) 71: 1574
     #_____________________________________________________________________________
-    def __init__(self, Ee, Ep, emin=8, tmax=1.5e-3):
+    def __init__(self, Ee, Ep, parse):
 
         #electron beam, GeV
         self.Ee = Ee
@@ -14,10 +17,11 @@ class gen_zeus:
         self.Ep = Ep
 
         #minimal photon energy, GeV
-        self.emin = emin
+        self.emin = parse.getfloat("lgen", "emin")
+        print "emin =", self.emin
 
         #maximal photon angle
-        self.tmax = tmax
+        self.tmax = 1.5e-3
 
         #electron and proton mass
         self.me = TDatabasePDG.Instance().GetParticle(11).Mass()
@@ -70,8 +74,14 @@ class gen_zeus:
         return self.theta_const * t/(( (self.me/self.Ee)**2 + t**2 )**2)
 
     #_____________________________________________________________________________
-    def generate(self):
+    def generate(self, add_particle):
 
+        #initialize the scattered electron as a beam electron
+        electron = add_particle( beam(self.Ee, 11, -1) )
+        electron.stat = 1
+        electron.pxyze_prec = 9
+
+        #kinematics for the Bethe-Heitler bremsstrahlung photon
         #energy and polar angle
         en = self.dSigDe.GetRandom()
         theta = self.dSigDtheta.GetRandom()
@@ -79,7 +89,13 @@ class gen_zeus:
         #azimuthal angle
         phi = 2. * TMath.Pi() * self.rand.Rndm()
 
-        return en, theta, phi
+        #put the Bethe-Heitler bremsstrahlung photon to the event
+        phot = add_particle( photon(en, theta, phi) )
+        phot.pxyze_prec = 9 # increase kinematics precision for the photon
+
+        #constrain the scattered electron with the photon
+        electron.vec -= phot.vec
+
 
 
 

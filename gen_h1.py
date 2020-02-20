@@ -1,20 +1,24 @@
 
 from ROOT import TF1, TDatabasePDG, TMath, TRandom3, gRandom
 
+from photon import photon
+from beam import beam
+
 #_____________________________________________________________________________
 class gen_h1:
     #Bethe-Heitler bremsstrahlung photon generator according to H1
     #S. Levonian, H1LUMI, H1-04/93-287
     #_____________________________________________________________________________
-    def __init__(self, Ee, Ep, emin = 8, tmax = 1.5e-3):
+    def __init__(self, Ee, Ep, parse):
 
         #energy of electron beam, GeV
         self.Ee = Ee
         #proton beam, GeV
         self.Ep = Ep
 
-        #minimal photon energy
-        self.emin = float(emin)
+        #minimal photon energy, GeV
+        self.emin = parse.getfloat("lgen", "emin")
+        print "emin =", self.emin
 
         #electron and proton mass
         self.me = TDatabasePDG.Instance().GetParticle(11).Mass()
@@ -31,6 +35,7 @@ class gen_h1:
         #parametrizations for dSigma/dy and dSigma/dtheta
         gRandom.SetSeed(5572323)
         self.dSigDy = TF1("dSigDy", self.eq1, self.emin/self.Ee, 1)
+        tmax = 1.5e-3 #maximal photon angle
         self.dSigDtheta = TF1("dSigDtheta", self.eq3, 0, tmax)
 
         #uniform generator for azimuthal angles
@@ -41,17 +46,27 @@ class gen_h1:
         print("Total cross section: "+str(self.dSigDy.Integral(self.emin/self.Ee, 1))+" mb")
 
     #_____________________________________________________________________________
-    def generate(self):
+    def generate(self, add_particle):
 
+        #initialize the scattered electron as a beam electron
+        electron = add_particle( beam(self.Ee, 11, -1) )
+        electron.stat = 1
+        electron.pxyze_prec = 9
+
+        #kinematics for the Bethe-Heitler bremsstrahlung photon
         #energy and polar angle
         en = self.dSigDy.GetRandom() * self.Ee
-        #en = 0.1
         theta = self.dSigDtheta.GetRandom()
 
         #azimuthal angle
         phi = 2. * TMath.Pi() * self.rand.Rndm()
 
-        return en, theta, phi
+        #put the Bethe-Heitler bremsstrahlung photon to the event
+        phot = add_particle( photon(en, theta, phi) )
+        phot.pxyze_prec = 9 # increase kinematics precision for the photon
+
+        #constrain scattered electron with the photon
+        electron.vec -= phot.vec
 
     #_____________________________________________________________________________
     def eq1(self, x):

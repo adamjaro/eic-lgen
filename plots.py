@@ -9,6 +9,38 @@ from gen_h1 import gen_h1
 import plot_utils as ut
 
 #_____________________________________________________________________________
+def plot_el_en():
+
+    #scattered electron energy
+
+    ebin = 0.1
+    emin = 0
+    emax = 20
+
+    can = ut.box_canvas()
+
+    hE = ut.prepare_TH1D("hE", ebin, emin, emax)
+
+    tree.Draw("el_en >> hE")
+
+    hE.SetYTitle("Events / ({0:.3f}".format(ebin)+" GeV)")
+    hE.SetXTitle("#it{E}_{e} (GeV)")
+
+    hE.SetTitleOffset(1.9, "Y")
+    hE.SetTitleOffset(1.3, "X")
+
+    ut.set_margin_lbtr(gPad, 0.14, 0.1, 0.02, 0.01)
+
+    #hE.GetYaxis().SetMoreLogLabels()
+
+    hE.Draw()
+
+    #gPad.SetLogy()
+
+    ut.invert_col(rt.gPad)
+    can.SaveAs("01fig.pdf")
+
+#_____________________________________________________________________________
 def plot_vxy():
 
     #vertex position of generated photon along x and y
@@ -184,7 +216,7 @@ def plot_dSigDtheta():
 
     gPad.SetLogy()
 
-    #ut.invert_col(rt.gPad)
+    ut.invert_col(rt.gPad)
     can.SaveAs("01fig.pdf")
 
 #_____________________________________________________________________________
@@ -329,7 +361,7 @@ if __name__ == "__main__":
     gStyle.SetPadTickX(1)
     gStyle.SetFrameLineWidth(2)
 
-    iplot = 4
+    iplot = 9
     funclist = []
     funclist.append( plot_dSigDe ) # 0
     funclist.append( plot_dSigDy ) # 1
@@ -340,6 +372,7 @@ if __name__ == "__main__":
     funclist.append( plot_vz ) # 6
     funclist.append( plot_theta_SigTheta ) # 7
     funclist.append( plot_vxy ) # 8
+    funclist.append( plot_el_en ) # 9
 
     #open the input
     inp = TFile.Open(infile)

@@ -7,16 +7,17 @@ from ROOT import TF1
 class beam_effects:
     #angular divergence and emittance
     #_____________________________________________________________________________
-    def __init__(self, config):
-
-        parse = ConfigParser.RawConfigParser()
-        parse.read(config)
+    def __init__(self, parse):
 
         # flag to use or not use the beam effects
-        self.use_beam_effects = parse.getboolean("beff", "use_beam_effects")
+        self.use_beam_effects = False
+        if parse.has_section("beff") == True:
+            self.use_beam_effects = parse.getboolean("beff", "use_beam_effects")
 
         print "Beam effects configuration:"
         print "use_beam_effects =", self.use_beam_effects
+
+        if self.use_beam_effects == False: return
 
         #angular divergence along theta, sigma_theta in rad
         sig_theta = parse.getfloat("beff", "sig_theta")
@@ -37,35 +38,42 @@ class beam_effects:
         self.emit_y.SetParameters(1, 0, sig_y)
 
         #bunch length along z
+        #parse.set("beff", "sig_z", 1.)
         sig_z = parse.getfloat("beff", "sig_z")
         print "sig_z =", sig_z
         self.vtx_z = TF1("vtx_z", "gaus", -6.*sig_z, 6.*sig_z)
         self.vtx_z.SetParameters(1, 0, sig_z)
 
     #_____________________________________________________________________________
-    def apply(self, phot, el):
+    def apply(self, tracks):
         #apply beam effects to outgoing photon phot and electron el
 
         if not self.use_beam_effects: return
 
-        #angular divergence, photon only
+        #angular divergence
         theta_add = self.angular_divergence.GetRandom()
-        phot.vec.SetTheta( phot.vec.Theta() - theta_add )
 
-        #beam size in x, all particles
+        #beam size in x and y
         xpos = self.emit_x.GetRandom()
-        phot.vx = xpos
-        el.vx = xpos
-
-        #beam size in y, all particles
         ypos = self.emit_y.GetRandom()
-        phot.vy = ypos
-        el.vy = ypos
 
         #bunch length along z
         zpos = self.vtx_z.GetRandom()
-        phot.vz = zpos
-        el.vz = zpos
+
+        #apply to the final particles
+        for i in tracks:
+            #select only final particles
+            if i.stat != 1: continue
+
+            i.vec.SetTheta( i.vec.Theta() - theta_add )
+            i.vx = xpos
+            i.vy = ypos
+            i.vz = zpos
+
+
+
+
+
 
 
 
