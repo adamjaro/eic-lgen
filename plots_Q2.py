@@ -8,7 +8,8 @@ import plot_utils as ut
 #_____________________________________________________________________________
 def main():
 
-    infile = "lgen.root"
+    #infile = "lgen.root"
+    infile = "../lgen/data/lgen_18x275_qr_1p2Mevt.root"
 
     iplot = 2
     funclist = []
@@ -16,6 +17,8 @@ def main():
     funclist.append( gen_Q2 ) # 1
     funclist.append( gen_Log10_Q2 ) # 2
     funclist.append( gen_E ) # 3
+    funclist.append( gen_theta ) # 4
+    funclist.append( gen_Q2_theta ) # 5
 
     inp = TFile.Open(infile)
     global tree
@@ -132,6 +135,65 @@ def gen_E():
     can.SaveAs("01fig.pdf")
 
 #gen_E
+
+#_____________________________________________________________________________
+def gen_theta():
+
+    #electron polar angle theta
+
+    #theta range, rad
+    tbin = 1e-3
+    tmin = 0
+    tmax = 0.2
+
+    hTheta = ut.prepare_TH1D("hTheta", tbin, tmin, tmax)
+
+    tree.Draw("gen_theta >> hTheta")
+
+    can = ut.box_canvas()
+
+    ut.put_yx_tit(hTheta, "Events", "#theta (rad)", 1.4, 1.2)
+
+    hTheta.Draw()
+
+    gPad.SetLogy()
+
+    ut.invert_col(rt.gPad)
+    can.SaveAs("01fig.pdf")
+
+#gen_theta
+
+#_____________________________________________________________________________
+def gen_Q2_theta():
+
+    #Q^2 relative to theta
+
+    qbin = 1e-3
+    #qmin = 1e-5
+    qmin = 0
+    qmax = 0.45
+
+    tbin = 5e-4
+    tmin = 0
+    tmax = 0.04
+
+    hQ2theta = ut.prepare_TH2D("hQ2theta", tbin, tmin, tmax, qbin, qmin, qmax)
+
+    tree.Draw("gen_Q2:gen_theta >> hQ2theta")
+
+    can = ut.box_canvas()
+
+    ut.put_yx_tit(hQ2theta, "#it{Q}^{2}", "#theta (rad)", 1.4, 1.2)
+
+    hQ2theta.Draw()
+
+    #gPad.SetLogx()
+    gPad.SetLogz()
+
+    ut.invert_col(rt.gPad)
+    can.SaveAs("01fig.pdf")
+
+#gen_Q2_theta
 
 #_____________________________________________________________________________
 if __name__ == "__main__":
