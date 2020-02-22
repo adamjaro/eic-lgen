@@ -17,7 +17,7 @@ import math
 from math import pi
 
 import ROOT as rt
-from ROOT import TF2, Double, TMath, TRandom3, gROOT, AddressOf
+from ROOT import TF2, Double, TMath, TRandom3, gROOT, AddressOf, TDatabasePDG
 
 from electron import electron
 
@@ -29,6 +29,9 @@ class gen_quasi_real:
         #electron and proton beam energy, GeV
         self.Ee = Ee
         self.Ep = Ep
+
+        #electron mass
+        self.me = TDatabasePDG.Instance().GetParticle(11).Mass()
 
         #center-of-mass squared s, GeV^2
         self.s = self.get_s(self.Ee, self.Ep)
@@ -79,25 +82,26 @@ class gen_quasi_real:
     #_____________________________________________________________________________
     def generate(self, add_particle):
 
-        #electron polar angle theta
+        #electron polar angle theta and energy E
         theta = -1.
-        while theta < 0. or theta > pi:
+        E = 0.
+        while theta < 0. or theta > pi or E**2 < self.me**2:
 
             #values of the x and y from the cross section
             x = Double(0)
             y = Double(0)
             self.eq.GetRandom2(x, y)
 
+            #electron angle and energy
             theta = math.sqrt( x*y*self.s/((1.-y)*self.Ee**2) )
+            E = self.Ee*(1.-y)
 
         #tree output with generator kinematics
         self.out.gen_x = x
         self.out.gen_y = y
         self.out.gen_Q2 = x*y*self.s
-        self.out.gen_theta = theta
 
-        #electron energy
-        E = self.Ee*(1.-y)
+        self.out.gen_theta = theta
         self.out.gen_E = E
 
         #uniform azimuthal angle
@@ -107,8 +111,6 @@ class gen_quasi_real:
         #put the electron to the event
         el = add_particle( electron(E, theta, phi) )
         el.pxyze_prec = 9
-
-        #print theta, E, phi
 
     #_____________________________________________________________________________
     def eq_II6(self, val):
@@ -131,15 +133,12 @@ class gen_quasi_real:
 
         #calculate the CMS squared s
 
-        from ROOT import TDatabasePDG, TMath
-
-        #electron and proton mass for ep CMS energy squared s
-        me = TDatabasePDG.Instance().GetParticle(11).Mass()
+        #proton mass
         mp = TDatabasePDG.Instance().GetParticle(2212).Mass()
 
         #CMS energy squared s, GeV^2
-        s = 2.*Ee*Ep + me**2 + mp**2
-        s += 2*TMath.Sqrt(Ee**2 - me**2) * TMath.Sqrt(Ep**2 - mp**2)
+        s = 2.*Ee*Ep + self.me**2 + mp**2
+        s += 2*TMath.Sqrt(Ee**2 - self.me**2) * TMath.Sqrt(Ep**2 - mp**2)
 
         #print "sqrt(s):", TMath.Sqrt(s)
 

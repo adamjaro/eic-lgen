@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python
 
 # /usr/bin/python
 # /afs/rhic.bnl.gov/eic/bin/python
