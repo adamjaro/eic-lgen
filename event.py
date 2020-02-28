@@ -10,6 +10,7 @@ from file_io import file_io
 from gen_h1 import gen_h1
 from gen_zeus import gen_zeus
 from gen_quasi_real import gen_quasi_real
+from gen_quasi_real_v2 import gen_quasi_real_v2
 
 #_____________________________________________________________________________
 class event:
@@ -39,7 +40,9 @@ class event:
         elif par == "zeus":
             self.gen = gen_zeus(self.Ee, self.Ep, parse)
         elif par == "quasi-real":
-            self.gen = gen_quasi_real(self.Ee, self.Ep, parse, self.io.ltree)
+            self.gen = gen_quasi_real(parse, self.io.ltree)
+        elif par == "quasi-real-v2":
+            self.gen = gen_quasi_real_v2(parse, self.io.ltree)
         else:
             print "Invalid generator specified"
             exit()

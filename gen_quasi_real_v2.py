@@ -1,18 +1,4 @@
 
-#_____________________________________________________________________________
-# Quasi-real photoproduction at low Q^2
-#
-# d^2 sigma / dxdy is Eq. II.6 in Amaldi, ed., Study on ep facility, 1979, page 320,
-# Conf.Proc. C790402 (1979) 1-474, http://inspirehep.net/record/151135
-#
-# The procedure was used in S. Levonian, H1LUMI, H1-04/93-287 (1993),
-# https://www-h1.desy.de/~levonian/papers/h1lumi.ps.gz
-#
-# The total gamma-proton cross section is from Donnachie, Landshoff, Total cross sections,
-# Phys.Lett. B296 (1992) 227-232, http://inspirehep.net/record/337839
-# 
-#_____________________________________________________________________________
-
 import math
 from math import pi
 
@@ -22,7 +8,7 @@ from ROOT import TF2, Double, TMath, TRandom3, gROOT, AddressOf, TDatabasePDG
 from electron import electron
 
 #_____________________________________________________________________________
-class gen_quasi_real:
+class gen_quasi_real_v2:
     #_____________________________________________________________________________
     def __init__(self, parse, tree):
 
@@ -44,28 +30,39 @@ class gen_quasi_real:
         print "xmin =", xmin
         print "xmax =", xmax
 
+        #range in u = log_10(x)
+        umin = TMath.Log10(xmin)
+        umax = TMath.Log10(xmax)
+        print "umin =", umin
+        print "umax =", umax
+
         #range in y
         ymin = parse.getfloat("lgen", "ymin")
         ymax = parse.getfloat("lgen", "ymax")
         print "ymin =", ymin
         print "ymax =", ymax
 
+        #range in v = log_10(y)
+        vmin = TMath.Log10(ymin)
+        vmax = TMath.Log10(ymax)
+        print "vmin =", vmin
+        print "vmax =", vmax
+
         #constant term in the cross section
-        self.const = (1./137)/(2.*math.pi)
+        self.const = TMath.Log(10)*TMath.Log(10)*(1./137)/(2.*math.pi)
 
         #cross section formula for d^2 sigma / dxdy, Eq. II.6
-        self.eq = TF2("d2SigDxDyII6", self.eq_II6, xmin, xmax, ymin, ymax)
+        #transformed as x -> u = log_10(x) and y -> v = log_10(y)
+        self.eq = TF2("d2SigDuDvII6", self.eq_II6_uv, umin, umax, vmin, vmax)
 
-        #number of points for function evaluation to generate
-        #the values of x and y down to x = 1e-7
-        self.eq.SetNpx(10000) # max for npx allowed in ROOT
+        #self.eq.SetNpy(10000)
 
         #uniform generator for azimuthal angles
         self.rand = TRandom3()
         self.rand.SetSeed(5572323)
 
         #generator event variables in output tree
-        tnam = ["gen_x", "gen_y", "gen_Q2", "gen_theta", "gen_E", "gen_phi"]
+        tnam = ["gen_u", "gen_v", "gen_x", "gen_y", "gen_Q2", "gen_theta", "gen_E", "gen_phi"]
 
         #create the tree variables
         tcmd = "struct gen_out { Double_t "
@@ -80,7 +77,7 @@ class gen_quasi_real:
             for i in tnam:
                 tree.Branch(i, AddressOf(self.out, i), i+"/D")
 
-        print "Quasi-real photoproduction initialized"
+        print "Quasi-real photoproduction version 2 initialized"
 
     #_____________________________________________________________________________
     def generate(self, add_particle):
@@ -90,16 +87,22 @@ class gen_quasi_real:
         E = 0.
         while theta < 0. or theta > pi or E**2 < self.me**2:
 
-            #values of the x and y from the cross section
-            x = Double(0)
-            y = Double(0)
-            self.eq.GetRandom2(x, y)
+            #values of the u = log_10(x) and y from the cross section
+            u = Double(0)
+            v = Double(0)
+            self.eq.GetRandom2(u, v)
+
+            #x and y from the transformation
+            x = 10.**u
+            y = 10.**v
 
             #electron angle and energy
             theta = math.sqrt( x*y*self.s/((1.-y)*self.Ee**2) )
             E = self.Ee*(1.-y)
 
         #tree output with generator kinematics
+        self.out.gen_u = u
+        self.out.gen_v = v
         self.out.gen_x = x
         self.out.gen_y = y
         self.out.gen_Q2 = x*y*self.s
@@ -116,18 +119,18 @@ class gen_quasi_real:
         el.pxyze_prec = 9
 
     #_____________________________________________________________________________
-    def eq_II6(self, val):
+    def eq_II6_uv(self, val):
 
-        #II.6
-        x = val[0]
-        y = val[1]
+        #II.6 transformed as x -> u = log_10(x)
+        u = val[0]
+        v = val[1]
 
-        #print "x:", x, "y:", y
-
-        sig = self.const*( (1.+(1.-y)**2)/y )*(1.-x)/x
+        #sig = self.const*( y + 2.*(1.-y)/y )*(1.-10.**u)
+        sig = self.const*( 1. + (1.-10**v)**2 )*(1.-10.**u)
 
         #term of the total gamma-p cross section by Donnachie, Landshoff, 1992
-        sig *= 0.0677*(y*self.s)**0.0808 + 0.129*(y*self.s)**-0.4525 # mb
+        #sig *= 0.0677*(y*self.s)**0.0808 + 0.129*(y*self.s)**-0.4525 # mb
+        sig *= 0.0677*((10.**v)*self.s)**0.0808 + 0.129*((10.**v)*self.s)**-0.4525 # mb
 
         return sig
 
@@ -146,10 +149,6 @@ class gen_quasi_real:
         #print "sqrt(s):", TMath.Sqrt(s)
 
         return s
-
-
-
-
 
 
 

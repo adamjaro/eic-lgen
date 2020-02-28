@@ -8,12 +8,14 @@ import plot_utils as ut
 #_____________________________________________________________________________
 def main():
 
-    #infile = "lgen.root"
+    infile = "lgen.root"
     #infile = "../lgen/data/lgen_18x275_qr_1p2Mevt.root"
-    infile = "../lgen/data/lgen_18x275_qr_xB_yA_1p2Mevt.root"
+    #infile = "../lgen/data/lgen_18x275_qr_xB_yA_1p2Mevt.root"
     #infile = "../lgen/data/lgen_18x275_qr_xB_yB_1p2Mevt.root"
+    #infile = "../lgen/data/lgen_18x275_qr_xC_yA_1p2Mevt.root"
+    #infile = "../lgen/data/lgen_18x275_qr_xD_yC_1p2Mevt.root"
 
-    iplot = 7
+    iplot = 2
     funclist = []
     funclist.append( gen_xy ) # 0
     funclist.append( gen_Q2 ) # 1
@@ -23,6 +25,8 @@ def main():
     funclist.append( gen_Q2_theta ) # 5
     funclist.append( gen_Log10x_y ) # 6
     funclist.append( gen_Q2_theta_E ) # 7
+    funclist.append( gen_run_qr ) # 8
+    funclist.append( gen_Log10x_Log10y ) # 9
 
     inp = TFile.Open(infile)
     global tree
@@ -38,7 +42,7 @@ def gen_xy():
     #distribution of x and y
 
     xbin = 2e-9
-    xmin = 8e-9
+    xmin = 8e-14
     xmax = 2e-4
 
     ybin = 1e-2
@@ -96,7 +100,7 @@ def gen_Log10_Q2():
     #plot the log_10(Q^2)
 
     lqbin = 0.1
-    lqmin = -5
+    lqmin = -11
     lqmax = 2
 
     hLog10Q2 = ut.prepare_TH1D("hLog10Q2", lqbin, lqmin, lqmax)
@@ -104,6 +108,8 @@ def gen_Log10_Q2():
     tree.Draw("TMath::Log10(gen_Q2) >> hLog10Q2")
 
     can = ut.box_canvas()
+
+    gPad.SetGrid()
 
     ut.put_yx_tit(hLog10Q2, "Events", "log_{10}(#it{Q}^{2})", 1.4, 1.2)
 
@@ -119,9 +125,9 @@ def gen_E():
 
     #electron energy
 
-    ebin = 0.1
+    ebin = 0.01
     emin = 0
-    emax = 17
+    emax = 20
 
     hE = ut.prepare_TH1D("hE", ebin, emin, emax)
 
@@ -133,7 +139,7 @@ def gen_E():
 
     hE.Draw()
 
-    #gPad.SetLogy()
+    gPad.SetLogy()
 
     ut.invert_col(rt.gPad)
     can.SaveAs("01fig.pdf")
@@ -205,19 +211,20 @@ def gen_Log10x_y():
     #distribution of log_10(x) and y
 
     xbin = 0.01
-    xmin = -8.5
+    xmin = -13.5
     xmax = -3.5
 
-    ybin = 5e-3
+    ybin = 5e-5
     #ymin = 0.06
-    ymin = 1e-2
+    ymin = 0
     ymax = 1.1
 
     hXY = ut.prepare_TH2D("hXY", xbin, xmin, xmax, ybin, ymin, ymax)
 
-    tree.Draw("gen_y:TMath::Log10(gen_x) >> hXY")
-
     can = ut.box_canvas()
+
+    tree.Draw("gen_y:TMath::Log10(gen_x) >> hXY")
+    #tree.Draw("gen_y:gen_u >> hXY")
 
     ytit = "#it{y}"+" / {0:.3f}".format(ybin)
     xtit = "log_{10}(x)"+" / {0:.3f}".format(xbin)
@@ -227,10 +234,10 @@ def gen_Log10x_y():
 
     hXY.Draw()
 
-    #gPad.SetLogx()
+    gPad.SetLogy()
     gPad.SetLogz()
 
-    #ut.invert_col(rt.gPad)
+    ut.invert_col(rt.gPad)
     can.SaveAs("01fig.pdf")
 
 #gen_Log10x_y
@@ -282,6 +289,67 @@ def gen_Q2_theta_E():
     can.SaveAs("01fig.pdf")
 
 #gen_Q2_theta_E
+
+#_____________________________________________________________________________
+def gen_run_qr():
+
+    #run a testing sample with the quasi-real generator
+
+    from gen_quasi_real import gen_quasi_real
+    from gen_quasi_real_v2 import gen_quasi_real_v2
+    import ConfigParser
+
+    parse = ConfigParser.RawConfigParser()
+    parse.read("lgen_quasireal_18x275.ini")
+
+    #gen = gen_quasi_real(parse, None)
+    gen = gen_quasi_real_v2(parse, None)
+
+    for i in xrange(12):
+
+        u = rt.Double(0)
+        y = rt.Double(0)
+        gen.eq.GetRandom2(u, y)
+
+        print u, y
+
+#gen_run_qr
+
+#_____________________________________________________________________________
+def gen_Log10x_Log10y():
+
+    #distribution of log_10(x) and log_10(y)
+
+    xbin = 0.01
+    xmin = -13.5
+    xmax = -3.5
+
+    ybin = 0.01
+    ymin = -5
+    ymax = 0
+
+    hXY = ut.prepare_TH2D("hXY", xbin, xmin, xmax, ybin, ymin, ymax)
+
+    can = ut.box_canvas()
+
+    tree.Draw("TMath::Log10(gen_y):TMath::Log10(gen_x) >> hXY")
+    #tree.Draw("gen_y:gen_u >> hXY")
+
+    ytit = "log_{10}(#it{y})"+" / {0:.3f}".format(ybin)
+    xtit = "log_{10}(#it{x})"+" / {0:.3f}".format(xbin)
+    ut.put_yx_tit(hXY, ytit, xtit, 1.4, 1.4)
+
+    ut.set_margin_lbtr(gPad, 0.1, 0.11, 0.03, 0.12)
+
+    hXY.Draw()
+
+    #gPad.SetLogy()
+    gPad.SetLogz()
+
+    ut.invert_col(rt.gPad)
+    can.SaveAs("01fig.pdf")
+
+#gen_Log10x_y
 
 #_____________________________________________________________________________
 if __name__ == "__main__":
