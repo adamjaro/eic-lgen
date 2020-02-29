@@ -1,4 +1,21 @@
 
+#_____________________________________________________________________________
+# Quasi-real photoproduction at low Q^2
+#
+# d^2 sigma / dxdy is Eq. II.6 in Amaldi, ed., Study on ep facility, 1979, page 320,
+# Conf.Proc. C790402 (1979) 1-474, http://inspirehep.net/record/151135
+#
+# Version 2 improvement: the cross section is transformed to log_10(x) and log_10(y)
+# for arbitrary kinematics reach
+#
+# The total gamma-proton cross section is from Donnachie, Landshoff, Total cross sections,
+# Phys.Lett. B296 (1992) 227-232, http://inspirehep.net/record/337839
+#
+# Similar procedure was followed in S. Levonian, H1LUMI, H1-04/93-287 (1993),
+# https://www-h1.desy.de/~levonian/papers/h1lumi.ps.gz
+# 
+#_____________________________________________________________________________
+
 import math
 from math import pi
 
@@ -24,7 +41,7 @@ class gen_quasi_real_v2:
         #center-of-mass squared s, GeV^2
         self.s = self.get_s(self.Ee, self.Ep)
 
-        #range in x and y, max 4 orders of magnitude for the range of x
+        #range in x and y
         xmin = parse.getfloat("lgen", "xmin")
         xmax = parse.getfloat("lgen", "xmax")
         print "xmin =", xmin
@@ -48,6 +65,12 @@ class gen_quasi_real_v2:
         print "vmin =", vmin
         print "vmax =", vmax
 
+        #range in Q2
+        self.Q2min = parse.getfloat("lgen", "Q2min")
+        self.Q2max = parse.getfloat("lgen", "Q2max")
+        print "Q2min =", self.Q2min
+        print "Q2max =", self.Q2max
+
         #constant term in the cross section
         self.const = TMath.Log(10)*TMath.Log(10)*(1./137)/(2.*math.pi)
 
@@ -55,7 +78,8 @@ class gen_quasi_real_v2:
         #transformed as x -> u = log_10(x) and y -> v = log_10(y)
         self.eq = TF2("d2SigDuDvII6", self.eq_II6_uv, umin, umax, vmin, vmax)
 
-        #self.eq.SetNpy(10000)
+        self.eq.SetNpx(1000)
+        self.eq.SetNpy(1000)
 
         #uniform generator for azimuthal angles
         self.rand = TRandom3()
@@ -83,11 +107,12 @@ class gen_quasi_real_v2:
     def generate(self, add_particle):
 
         #electron polar angle theta and energy E
-        theta = -1.
-        E = 0.
-        while theta < 0. or theta > pi or E**2 < self.me**2:
+        #theta = -1.
+        #E = 0.
+        while True:
 
-            #values of the u = log_10(x) and y from the cross section
+            #values of the u = log_10(x) and v = log_10(y)
+            #from the cross section
             u = Double(0)
             v = Double(0)
             self.eq.GetRandom2(u, v)
@@ -100,12 +125,21 @@ class gen_quasi_real_v2:
             theta = math.sqrt( x*y*self.s/((1.-y)*self.Ee**2) )
             E = self.Ee*(1.-y)
 
+            #Q^2
+            Q2 = x*y*self.s
+
+            if Q2 < self.Q2min or Q2 > self.Q2max: continue
+            if theta < 0. or theta > pi: continue
+            if E**2 < self.me**2: continue
+
+            break
+
         #tree output with generator kinematics
         self.out.gen_u = u
         self.out.gen_v = v
         self.out.gen_x = x
         self.out.gen_y = y
-        self.out.gen_Q2 = x*y*self.s
+        self.out.gen_Q2 = Q2
 
         self.out.gen_theta = theta
         self.out.gen_E = E
@@ -121,15 +155,13 @@ class gen_quasi_real_v2:
     #_____________________________________________________________________________
     def eq_II6_uv(self, val):
 
-        #II.6 transformed as x -> u = log_10(x)
+        #II.6 transformed as x -> u = log_10(x) and y -> v = log_10(y)
         u = val[0]
         v = val[1]
 
-        #sig = self.const*( y + 2.*(1.-y)/y )*(1.-10.**u)
         sig = self.const*( 1. + (1.-10**v)**2 )*(1.-10.**u)
 
         #term of the total gamma-p cross section by Donnachie, Landshoff, 1992
-        #sig *= 0.0677*(y*self.s)**0.0808 + 0.129*(y*self.s)**-0.4525 # mb
         sig *= 0.0677*((10.**v)*self.s)**0.0808 + 0.129*((10.**v)*self.s)**-0.4525 # mb
 
         return sig

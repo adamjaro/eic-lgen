@@ -8,14 +8,15 @@ import plot_utils as ut
 #_____________________________________________________________________________
 def main():
 
-    infile = "lgen.root"
+    #infile = "lgen.root"
     #infile = "../lgen/data/lgen_18x275_qr_1p2Mevt.root"
     #infile = "../lgen/data/lgen_18x275_qr_xB_yA_1p2Mevt.root"
     #infile = "../lgen/data/lgen_18x275_qr_xB_yB_1p2Mevt.root"
     #infile = "../lgen/data/lgen_18x275_qr_xC_yA_1p2Mevt.root"
     #infile = "../lgen/data/lgen_18x275_qr_xD_yC_1p2Mevt.root"
+    infile = "../lgen/data/lgen_18x275_qr_Qa_1p2Mevt.root"
 
-    iplot = 2
+    iplot = 10
     funclist = []
     funclist.append( gen_xy ) # 0
     funclist.append( gen_Q2 ) # 1
@@ -27,6 +28,7 @@ def main():
     funclist.append( gen_Q2_theta_E ) # 7
     funclist.append( gen_run_qr ) # 8
     funclist.append( gen_Log10x_Log10y ) # 9
+    funclist.append( gen_lx_ly_lQ2 ) # 10
 
     inp = TFile.Open(infile)
     global tree
@@ -247,29 +249,24 @@ def gen_Q2_theta_E():
 
     #Q^2 relative to theta and energy
 
-    #qbin = 1e-3
+    qbin = 1e-3
     qmin = 0
     qmax = 0.45
     #qmax = 1e-2
 
-    #tbin = 5e-4
+    tbin = 2e-4
     tmin = 0
     tmax = 0.04
 
+    ebin = 0.1
     emin = 0
-    emax = 17
+    emax = 20
 
-    hQtE = TH3D("hQtE", "hQtE", 100, tmin, tmax, 100, qmin, qmax, 100, emin, emax)
-
-    #hQ2theta = ut.prepare_TH2D("hQ2theta", tbin, tmin, tmax, qbin, qmin, qmax)
+    hQtE = ut.prepare_TH3D("hQtE", tbin, tmin, tmax, qbin, qmin, qmax, ebin, emin, emax)
 
     can = ut.box_canvas()
 
     tree.Draw("gen_E:gen_Q2:gen_theta >> hQtE")
-
-    hQtE.SetXTitle("x: theta")
-    hQtE.SetYTitle("y: Q2")
-    hQtE.SetZTitle("z: energy")
 
     profile = hQtE.Project3DProfile("yx")
 
@@ -285,7 +282,7 @@ def gen_Q2_theta_E():
 
     profile.Draw("colz")
 
-    #ut.invert_col(rt.gPad)
+    ut.invert_col(rt.gPad)
     can.SaveAs("01fig.pdf")
 
 #gen_Q2_theta_E
@@ -332,8 +329,8 @@ def gen_Log10x_Log10y():
 
     can = ut.box_canvas()
 
-    tree.Draw("TMath::Log10(gen_y):TMath::Log10(gen_x) >> hXY")
-    #tree.Draw("gen_y:gen_u >> hXY")
+    #tree.Draw("TMath::Log10(gen_y):TMath::Log10(gen_x) >> hXY")
+    tree.Draw("gen_v:gen_u >> hXY")
 
     ytit = "log_{10}(#it{y})"+" / {0:.3f}".format(ybin)
     xtit = "log_{10}(#it{x})"+" / {0:.3f}".format(xbin)
@@ -349,7 +346,51 @@ def gen_Log10x_Log10y():
     ut.invert_col(rt.gPad)
     can.SaveAs("01fig.pdf")
 
-#gen_Log10x_y
+#gen_Log10x_Log10y
+
+#_____________________________________________________________________________
+def gen_lx_ly_lQ2():
+
+    #distribution of log_10(x), log_10(y) and log_10(Q^2)
+
+    xbin = 0.01
+    xmin = -9
+    xmax = 0
+
+    ybin = 0.01
+    ymin = -9
+    ymax = 0
+
+    lqbin = 0.1
+    lqmin = -11
+    lqmax = 2
+
+    hXYQ2 = ut.prepare_TH3D("hXYQ2", xbin, xmin, xmax, ybin, ymin, ymax, lqbin, lqmin, lqmax)
+
+    can = ut.box_canvas()
+
+    tree.Draw("TMath::Log10(gen_Q2):gen_v:gen_u >> hXYQ2")
+
+    pXYQ2 = hXYQ2.Project3DProfile("yx")
+
+    ytit = "log_{10}(#it{y})"+" / {0:.3f}".format(ybin)
+    xtit = "log_{10}(#it{x})"+" / {0:.3f}".format(xbin)
+    pXYQ2.SetXTitle(xtit)
+    pXYQ2.SetYTitle(ytit)
+    pXYQ2.SetZTitle("log_{10}(#it{Q}^{2} (GeV^{2}))")
+    pXYQ2.SetTitle("")
+
+    pXYQ2.SetTitleOffset(1.3, "X")
+    pXYQ2.SetTitleOffset(1.4, "Z")
+
+    ut.set_margin_lbtr(gPad, 0.12, 0.1, 0.03, 0.15)
+
+    pXYQ2.Draw("colz")
+
+    ut.invert_col(rt.gPad)
+    can.SaveAs("01fig.pdf")
+
+#gen_lx_ly_lQ2
 
 #_____________________________________________________________________________
 if __name__ == "__main__":

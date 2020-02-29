@@ -62,6 +62,8 @@ class event:
     def event_loop(self, nev):
 
         for i in xrange(nev):
+            if i%100000 == 0:
+                print "Generating event:", i
             self.generate()
 
         print "All done"
