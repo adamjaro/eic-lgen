@@ -28,6 +28,7 @@ class gen_h1:
         #CMS energy squared, GeV^2
         self.s = 2*self.Ee*self.Ep + self.me**2 + self.mp**2
         self.s += 2*TMath.Sqrt(self.Ee**2 - self.me**2) * TMath.Sqrt(self.Ep**2 - self.mp**2)
+        print "s =", self.s, "GeV^2"
 
         #normalization,  4 alpha r_e^2
         self.ar2 = 4*7.297*2.818*2.818*1e-2 # m barn

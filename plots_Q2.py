@@ -14,9 +14,10 @@ def main():
     #infile = "../lgen/data/lgen_18x275_qr_xB_yB_1p2Mevt.root"
     #infile = "../lgen/data/lgen_18x275_qr_xC_yA_1p2Mevt.root"
     #infile = "../lgen/data/lgen_18x275_qr_xD_yC_1p2Mevt.root"
-    infile = "../lgen/data/lgen_18x275_qr_Qa_1p2Mevt.root"
+    #infile = "../lgen/data/lgen_18x275_qr_Qa_1p2Mevt.root"
+    infile = "../lgen/data/lgen_18x275_qr_Qb_1p2Mevt.root"
 
-    iplot = 10
+    iplot = 2
     funclist = []
     funclist.append( gen_xy ) # 0
     funclist.append( gen_Q2 ) # 1
@@ -114,6 +115,8 @@ def gen_Log10_Q2():
     gPad.SetGrid()
 
     ut.put_yx_tit(hLog10Q2, "Events", "log_{10}(#it{Q}^{2})", 1.4, 1.2)
+
+    gPad.SetLogy()
 
     hLog10Q2.Draw()
 
@@ -318,8 +321,8 @@ def gen_Log10x_Log10y():
     #distribution of log_10(x) and log_10(y)
 
     xbin = 0.01
-    xmin = -13.5
-    xmax = -3.5
+    xmin = -14
+    xmax = 0
 
     ybin = 0.01
     ymin = -5
@@ -354,11 +357,11 @@ def gen_lx_ly_lQ2():
     #distribution of log_10(x), log_10(y) and log_10(Q^2)
 
     xbin = 0.01
-    xmin = -9
+    xmin = -14
     xmax = 0
 
     ybin = 0.01
-    ymin = -9
+    ymin = -5
     ymax = 0
 
     lqbin = 0.1
