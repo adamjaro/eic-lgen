@@ -5,6 +5,7 @@ from ROOT import TLorentzVector
 from photon import photon
 from beam import beam
 from beam_effects import beam_effects
+from beam_effects_v2 import beam_effects_v2
 from file_io import file_io
 
 from gen_h1 import gen_h1
@@ -48,7 +49,11 @@ class event:
             exit()
 
         #beam effects, also reads config file
-        self.beff = beam_effects(parse)
+        self.beff = None
+        if parse.has_section("beff") == True:
+            self.beff = beam_effects(parse)
+        elif parse.has_section("beff2") == True:
+            self.beff = beam_effects_v2(parse)
 
         #tracks in the event
         self.tracks = []
@@ -98,7 +103,8 @@ class event:
             if i.pdg == 22: i.parent_id = 4
 
         #apply the beam effects
-        self.beff.apply(self.tracks)
+        if self.beff is not None:
+            self.beff.apply(self.tracks)
 
         #ascii event output
         self.io.write_dat(self.tracks)
