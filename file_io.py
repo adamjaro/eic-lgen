@@ -111,7 +111,7 @@ class file_io:
         #vtxlin = "VERTEX: "+str(vx)+" "+str(vy)+" "+str(vz)+" 0 1 0 0 "+ntrk
         vtxlin = "VERTEX:"
         vtx_prec = 9
-        if vx<1e-9 and vy<1e-9 and vz<1e-9:
+        if abs(vx)<1e-9 and abs(vy)<1e-9 and abs(vz)<1e-9:
             vtx_prec = 0
         vtx_form = " {0:."+str(vtx_prec)+"f}"
         vtxlin += vtx_form.format(vx)
