@@ -90,8 +90,11 @@ def plot_theta_SigTheta():
     tree.Draw("(TMath::Pi()-phot_theta) >> ht") # *1000
 
     #theta parametrization
+    import ConfigParser
+    parse = ConfigParser.RawConfigParser()
+    parse.read("lgen_18x275.ini")
     from gen_zeus import gen_zeus
-    gen = gen_zeus(18, 275, 1)
+    gen = gen_zeus(18, 275, parse)
     tpar = gen.dSigDtheta
     tpar.SetNpx(600)
     tpar.SetLineWidth(3)
@@ -111,7 +114,7 @@ def plot_theta_SigTheta():
 
     ht.Draw()
 
-    ht.SetMaximum(1e6)
+    ht.SetMaximum(5e6)
 
     tpar.Draw("same")
 
@@ -355,13 +358,13 @@ def plot_dSigDe():
 if __name__ == "__main__":
 
     #infile = "lgen.root"
-    infile = "/home/jaroslav/sim/lgen/data/lgen_18x275_10p1Mevt.root"
+    infile = "/home/jaroslav/sim/lgen/data/lgen_18x275_beff2_10p1Mevt.root"
 
     gROOT.SetBatch()
     gStyle.SetPadTickX(1)
     gStyle.SetFrameLineWidth(2)
 
-    iplot = 9
+    iplot = 7
     funclist = []
     funclist.append( plot_dSigDe ) # 0
     funclist.append( plot_dSigDy ) # 1
