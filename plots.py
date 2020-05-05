@@ -82,12 +82,15 @@ def plot_theta_SigTheta():
 
     tbin = 1e-5
     tmax = 1.5e-3
+    #tbin = 1e-2
+    #tmax = 1.5
 
     can = ut.box_canvas()
 
     ht = ut.prepare_TH1D("ht", tbin, 0, tmax)
 
-    tree.Draw("(TMath::Pi()-phot_theta) >> ht") # *1000
+    tree.Draw("(TMath::Pi()-phot_theta) >> ht")
+    #tree.Draw("(TMath::Pi()-phot_theta)*1e3 >> ht")
 
     #theta parametrization
     import ConfigParser
@@ -105,10 +108,10 @@ def plot_theta_SigTheta():
     gen.theta_const = norm * gen.theta_const
 
     ht.SetYTitle("Events / ({0:.3f}".format(tbin*1e3)+" mrad)")
-    ht.SetXTitle("#vartheta (rad)")
+    ht.SetXTitle("#theta_{\gamma} (rad)")
 
     ht.SetTitleOffset(1.5, "Y")
-    ht.SetTitleOffset(1.3, "X")
+    ht.SetTitleOffset(1.2, "X")
 
     ut.set_margin_lbtr(gPad, 0.11, 0.09, 0.02, 0.08)
 
@@ -120,7 +123,7 @@ def plot_theta_SigTheta():
 
     leg = ut.prepare_leg(0.37, 0.84, 0.2, 0.08, 0.035)
     leg.AddEntry(tpar, "Bethe-Heitler parametrization", "l")
-    leg.AddEntry(ht, "Angular divergence #sigma_{#vartheta} = 0.2 mrad", "lp")
+    leg.AddEntry(ht, "Angular divergence applied", "lp")
     leg.Draw("same")
 
     gPad.SetLogy()
