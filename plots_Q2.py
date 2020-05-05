@@ -18,7 +18,7 @@ def main():
     #infile = "../lgen/data/lgen_18x275_qr_Qb_1p2Mevt.root"
     infile = "../lgen/data/lgen_18x275_qr_Qc_10p2Mevt.root"
 
-    iplot = 9
+    iplot = 4
     funclist = []
     funclist.append( gen_xy ) # 0
     funclist.append( gen_Q2 ) # 1

@@ -14,28 +14,28 @@ class gen_electron_beam:
     def __init__(self, parse):
 
         #electron beam energy, GeV
-        Ee = parse.getfloat("lgen", "Ee")
-        print "Ee =", Ee
+        self.Ee = parse.getfloat("lgen", "Ee")
+        print "Ee =", self.Ee
 
         #electron mass
         me = TDatabasePDG.Instance().GetParticle(11).Mass()
 
         #momentum along z
-        pz = -TMath.Sqrt(Ee**2 - me**2)
-
-        #beam Lorentz vector
-        self.beam = particle(11)
-        self.beam.vec.SetPxPyPzE(0, 0, pz, Ee)
-        self.beam.stat = 1
-        self.beam.pxyze_prec = 9
+        self.pz = -TMath.Sqrt(self.Ee**2 - me**2)
 
         print "Electron beam initialized"
 
     #_____________________________________________________________________________
     def generate(self, add_particle):
 
-        #put the electron to the event
-        add_particle( self.beam )
+        #beam Lorentz vector
+        beam = particle(11)
+        beam.vec.SetPxPyPzE(0, 0, self.pz, self.Ee)
+        beam.stat = 1
+        beam.pxyze_prec = 9
+
+        #put the beam electron to the event
+        add_particle( beam )
 
 
 
