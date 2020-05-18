@@ -4,7 +4,7 @@
 #
 #_____________________________________________________________________________
 
-from ROOT import TMath, TDatabasePDG
+from ROOT import TMath, TDatabasePDG, TF1
 
 from particle import particle
 
@@ -17,20 +17,37 @@ class gen_electron_beam:
         self.Ee = parse.getfloat("lgen", "Ee")
         print "Ee =", self.Ee
 
-        #electron mass
-        me = TDatabasePDG.Instance().GetParticle(11).Mass()
+        #energy spread from input relative energy spread
+        self.espread = None
+        if parse.has_option("lgen", "espread"):
+            sig_e = self.Ee * parse.getfloat("lgen", "espread")
+            self.espread = TF1("espread", "gaus", -12*sig_e, 12*sig_e)
+            self.espread.SetParameters(1, 0, sig_e)
 
-        #momentum along z
-        self.pz = -TMath.Sqrt(self.Ee**2 - me**2)
+        #electron mass
+        self.me = TDatabasePDG.Instance().GetParticle(11).Mass()
 
         print "Electron beam initialized"
 
     #_____________________________________________________________________________
     def generate(self, add_particle):
 
+        #energy spread
+        de = 0
+        if self.espread is not None:
+            de = self.espread.GetRandom()
+
+        #print de
+
+        #electron energy and momentum along z
+        en = self.Ee + de
+        pz = -TMath.Sqrt(en**2 - self.me**2)
+
+        #print en, pz
+
         #beam Lorentz vector
         beam = particle(11)
-        beam.vec.SetPxPyPzE(0, 0, self.pz, self.Ee)
+        beam.vec.SetPxPyPzE(0, 0, pz, en)
         beam.stat = 1
         beam.pxyze_prec = 9
 

@@ -80,7 +80,7 @@ class beam_effects_v2:
     #_____________________________________________________________________________
     def make_gaus(self, name, sig):
 
-        gx = TF1(name, "gaus", -6.*sig, 6.*sig)
+        gx = TF1(name, "gaus", -12*sig, 12*sig)
         gx.SetParameters(1, 0, sig)
 
         return gx
