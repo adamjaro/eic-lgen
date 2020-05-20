@@ -9,6 +9,7 @@ import plot_utils as ut
 def main():
 
     #infile = "lgen.root"
+    infile = "lgen_test1.root"
     #infile = "../lgen/data/lgen_18x275_qr_1p2Mevt.root"
     #infile = "../lgen/data/lgen_18x275_qr_xB_yA_1p2Mevt.root"
     #infile = "../lgen/data/lgen_18x275_qr_xB_yB_1p2Mevt.root"
@@ -16,9 +17,9 @@ def main():
     #infile = "../lgen/data/lgen_18x275_qr_xD_yC_1p2Mevt.root"
     #infile = "../lgen/data/lgen_18x275_qr_Qa_1p2Mevt.root"
     #infile = "../lgen/data/lgen_18x275_qr_Qb_1p2Mevt.root"
-    infile = "../lgen/data/lgen_18x275_qr_Qc_10p2Mevt.root"
+    #infile = "../lgen/data/lgen_18x275_qr_Qc_10p2Mevt.root"
 
-    iplot = 4
+    iplot = 13
     funclist = []
     funclist.append( gen_xy ) # 0
     funclist.append( gen_Q2 ) # 1
@@ -31,6 +32,9 @@ def main():
     funclist.append( gen_run_qr ) # 8
     funclist.append( gen_Log10x_Log10y ) # 9
     funclist.append( gen_lx_ly_lQ2 ) # 10
+    funclist.append( rel_gen_Q2_el_Q2 ) # 11
+    funclist.append( gen_phi ) # 12
+    funclist.append( rel_gen_Q2_beff_el_Q2 ) # 13
 
     inp = TFile.Open(infile)
     global tree
@@ -105,11 +109,12 @@ def gen_Log10_Q2():
 
     lqbin = 0.1
     lqmin = -11
-    lqmax = 2
+    lqmax = 5
 
     hLog10Q2 = ut.prepare_TH1D("hLog10Q2", lqbin, lqmin, lqmax)
 
     tree.Draw("TMath::Log10(gen_Q2) >> hLog10Q2")
+    #tree.Draw("TMath::Log10(gen_el_Q2) >> hLog10Q2")
 
     can = ut.box_canvas()
 
@@ -164,7 +169,7 @@ def gen_theta():
 
     hTheta = ut.prepare_TH1D("hTheta", tbin, tmin, tmax)
 
-    tree.Draw("gen_theta >> hTheta")
+    tree.Draw("TMath::Pi()-gen_theta >> hTheta")
 
     can = ut.box_canvas()
 
@@ -321,12 +326,12 @@ def gen_Log10x_Log10y():
 
     #distribution of log_10(x) and log_10(y)
 
-    xbin = 0.01
-    xmin = -14
+    xbin = 0.1
+    xmin = -12
     xmax = 0
 
-    ybin = 0.01
-    ymin = -5
+    ybin = 0.1
+    ymin = -4.5
     ymax = 0
 
     hXY = ut.prepare_TH2D("hXY", xbin, xmin, xmax, ybin, ymin, ymax)
@@ -344,6 +349,11 @@ def gen_Log10x_Log10y():
 
     hXY.Draw()
 
+    hXY.SetMinimum(0.98)
+    hXY.SetContour(300)
+
+    gPad.SetGrid()
+
     #gPad.SetLogy()
     gPad.SetLogz()
 
@@ -357,17 +367,17 @@ def gen_lx_ly_lQ2():
 
     #distribution of log_10(x), log_10(y) and log_10(Q^2)
 
-    xbin = 0.01
-    xmin = -14
+    xbin = 0.1
+    xmin = -12
     xmax = 0
 
-    ybin = 0.01
-    ymin = -5
+    ybin = 0.1
+    ymin = -4.5
     ymax = 0
 
     lqbin = 0.1
-    lqmin = -11
-    lqmax = 2
+    lqmin = -9
+    lqmax = 3
 
     hXYQ2 = ut.prepare_TH3D("hXYQ2", xbin, xmin, xmax, ybin, ymin, ymax, lqbin, lqmin, lqmax)
 
@@ -387,7 +397,13 @@ def gen_lx_ly_lQ2():
     pXYQ2.SetTitleOffset(1.3, "X")
     pXYQ2.SetTitleOffset(1.4, "Z")
 
-    ut.set_margin_lbtr(gPad, 0.12, 0.1, 0.03, 0.15)
+    ut.set_margin_lbtr(gPad, 0.12, 0.1, 0.03, 0.16)
+
+    gPad.SetGrid()
+
+    pXYQ2.SetContour(300)
+    pXYQ2.SetMinimum(lqmin)
+    pXYQ2.SetMaximum(lqmax)
 
     pXYQ2.Draw("colz")
 
@@ -395,6 +411,158 @@ def gen_lx_ly_lQ2():
     can.SaveAs("01fig.pdf")
 
 #gen_lx_ly_lQ2
+
+#_____________________________________________________________________________
+def rel_gen_Q2_el_Q2():
+
+    #relative difference in true Q^2 and generated electron Q^2
+
+    dbin = 1e-5
+    dmin = -1e-2
+    dmax = 1e-2
+
+    lqbin = 0.1
+    lqmin = -12
+    lqmax = 3
+
+    hRQ2 = ut.prepare_TH2D("hRQ2", lqbin, lqmin, lqmax, dbin, dmin, dmax)
+
+    can = ut.box_canvas()
+
+    tree.Draw("(gen_Q2-gen_el_Q2)/gen_Q2:TMath::Log10(gen_Q2) >> hRQ2")
+
+    #ytit = "log_{10}(#it{y})"+" / {0:.3f}".format(ybin)
+    #xtit = "log_{10}(#it{x})"+" / {0:.3f}".format(xbin)
+    #ut.put_yx_tit(hXY, ytit, xtit, 1.4, 1.4)
+
+    #ut.set_margin_lbtr(gPad, 0.1, 0.11, 0.03, 0.12)
+
+    hRQ2.Draw()
+
+    hRQ2.SetMinimum(0.98)
+    hRQ2.SetContour(300)
+
+    gPad.SetGrid()
+
+    #gPad.SetLogy()
+    gPad.SetLogz()
+
+    ut.invert_col(rt.gPad)
+    can.SaveAs("01fig.pdf")
+
+#rel_gen_Q2_el_Q2
+
+#_____________________________________________________________________________
+def rel_gen_Q2_beff_el_Q2():
+
+    #relative difference in Q^2 between plain generator and electron after beam effects
+
+    dbin = 0.1
+    dmin = -1
+    dmax = 1
+
+    lqbin = 0.1
+    lqmin = -12
+    lqmax = 3
+
+    hRQ2 = ut.prepare_TH2D("hRQ2", lqbin, lqmin, lqmax, dbin, dmin, dmax)
+
+    can = ut.box_canvas()
+
+    tree.Draw("(gen_Q2-gen_el_Q2)/gen_Q2:TMath::Log10(gen_Q2) >> hRQ2")
+
+    #ytit = "log_{10}(#it{y})"+" / {0:.3f}".format(ybin)
+    #xtit = "log_{10}(#it{x})"+" / {0:.3f}".format(xbin)
+    #ut.put_yx_tit(hXY, ytit, xtit, 1.4, 1.4)
+
+    #ut.set_margin_lbtr(gPad, 0.1, 0.11, 0.03, 0.12)
+
+    hRQ2.Draw()
+
+    hRQ2.SetMinimum(0.98)
+    hRQ2.SetContour(300)
+
+    gPad.SetGrid()
+
+    #gPad.SetLogy()
+    gPad.SetLogz()
+
+    ut.invert_col(rt.gPad)
+    can.SaveAs("01fig.pdf")
+
+#rel_gen_Q2_beff_el_Q2
+
+#_____________________________________________________________________________
+def gen_phi():
+
+    #electron azimuthal angle phi
+
+    #phi range, rad
+    pbin = 0.1
+    pmin = -7
+    pmax = 7
+
+    hPhi = ut.prepare_TH1D("hPhi", pbin, pmin, pmax)
+
+    tree.Draw("gen_phi >> hPhi")
+
+    can = ut.box_canvas()
+
+    ut.put_yx_tit(hPhi, "Events", "#phi (rad)", 1.4, 1.2)
+
+    hPhi.Draw()
+
+    #gPad.SetLogy()
+
+    ut.invert_col(rt.gPad)
+    can.SaveAs("01fig.pdf")
+
+#gen_phi
+
+#_____________________________________________________________________________
+def rel_gen_Q2_beff_el_Q2():
+
+    #relative difference in Q^2 between plain generator and electron after beam effects
+
+    dbin = 0.05
+    dmin = -10
+    dmax = 2
+
+    lqbin = 0.05
+    lqmin = -11
+    lqmax = 3
+
+    hRQ2 = ut.prepare_TH2D("hRQ2", lqbin, lqmin, lqmax, dbin, dmin, dmax)
+
+    can = ut.box_canvas()
+
+    Q2form = "(2*18*el_en*(1-TMath::Cos(TMath::Pi()-el_theta)))"
+
+    #tree.Draw("(gen_el_Q2-"+Q2form+")/gen_el_Q2:TMath::Log10(gen_el_Q2) >> hRQ2")
+
+    tree.Draw("(gen_Q2-"+Q2form+")/gen_Q2:TMath::Log10(gen_Q2) >> hRQ2")
+
+
+    #ytit = "log_{10}(#it{y})"+" / {0:.3f}".format(ybin)
+    #xtit = "log_{10}(#it{x})"+" / {0:.3f}".format(xbin)
+    #ut.put_yx_tit(hXY, ytit, xtit, 1.4, 1.4)
+
+    #ut.set_margin_lbtr(gPad, 0.1, 0.11, 0.03, 0.12)
+
+    hRQ2.Draw()
+
+    hRQ2.SetMinimum(0.98)
+    hRQ2.SetContour(300)
+
+    gPad.SetGrid()
+
+    #gPad.SetLogy()
+    gPad.SetLogz()
+
+    ut.invert_col(rt.gPad)
+    can.SaveAs("01fig.pdf")
+
+#rel_gen_Q2_beff_el_Q2
 
 #_____________________________________________________________________________
 if __name__ == "__main__":

@@ -21,8 +21,9 @@ from math import pi
 
 import ROOT as rt
 from ROOT import TF2, Double, TMath, TRandom3, gROOT, AddressOf, TDatabasePDG
+from ROOT import TLorentzVector
 
-from electron import electron
+from particle import particle
 
 #_____________________________________________________________________________
 class gen_quasi_real_v2:
@@ -35,8 +36,20 @@ class gen_quasi_real_v2:
         print "Ee =", self.Ee
         print "Ep =", self.Ep
 
-        #electron mass
+        #electron and proton mass
         self.me = TDatabasePDG.Instance().GetParticle(11).Mass()
+        mp = TDatabasePDG.Instance().GetParticle(2212).Mass()
+
+        #boost vector pbvec of proton beam
+        pbeam = TLorentzVector()
+        pbeam.SetPxPyPzE(0, 0, TMath.Sqrt(self.Ep**2-mp**2), self.Ep)
+        self.pbvec = pbeam.BoostVector()
+
+        #electron beam energy Ee_p in proton beam rest frame
+        ebeam = TLorentzVector()
+        ebeam.SetPxPyPzE(0, 0, -TMath.Sqrt(self.Ee**2-self.me**2), self.Ee)
+        ebeam.Boost(-self.pbvec.x(), -self.pbvec.y(), -self.pbvec.z()) # transform to proton beam frame
+        self.Ee_p = ebeam.E()
 
         #center-of-mass squared s, GeV^2
         self.s = self.get_s(self.Ee, self.Ep)
@@ -87,6 +100,7 @@ class gen_quasi_real_v2:
 
         #generator event variables in output tree
         tnam = ["gen_u", "gen_v", "gen_x", "gen_y", "gen_Q2", "gen_theta", "gen_E", "gen_phi"]
+        tnam += ["gen_el_Q2"]
 
         #create the tree variables
         tcmd = "struct gen_out { Double_t "
@@ -94,10 +108,10 @@ class gen_quasi_real_v2:
             tcmd += i + ", "
         tcmd = tcmd[:-2] + ";};"
         gROOT.ProcessLine( tcmd )
+        self.out = rt.gen_out()
 
         #set the variables in the tree
         if tree is not None:
-            self.out = rt.gen_out()
             for i in tnam:
                 tree.Branch(i, AddressOf(self.out, i), i+"/D")
 
@@ -106,13 +120,10 @@ class gen_quasi_real_v2:
     #_____________________________________________________________________________
     def generate(self, add_particle):
 
-        #electron polar angle theta and energy E
-        #theta = -1.
-        #E = 0.
+        #get the x and y for a given range in Q^2
         while True:
 
-            #values of the u = log_10(x) and v = log_10(y)
-            #from the cross section
+            #values of u = log_10(x) and v = log_10(y) from the cross section
             u = Double(0)
             v = Double(0)
             self.eq.GetRandom2(u, v)
@@ -121,18 +132,38 @@ class gen_quasi_real_v2:
             x = 10.**u
             y = 10.**v
 
-            #electron angle and energy
-            theta = math.sqrt( x*y*self.s/((1.-y)*self.Ee**2) )
-            E = self.Ee*(1.-y)
+            #scattered electron energy and polar angle in proton beam rest frame
+            en_p = self.Ee_p*(1 - y)
+            theta_p = 2 * TMath.ASin( 0.5*TMath.Sqrt(x*y*self.s/((1-y)*self.Ee_p**2)) )
 
-            #Q^2
+            #event Q^2
             Q2 = x*y*self.s
 
             if Q2 < self.Q2min or Q2 > self.Q2max: continue
-            if theta < 0. or theta > pi: continue
-            if E**2 < self.me**2: continue
+            if theta_p < 0. or theta_p > pi: continue
+            if en_p**2 < self.me**2: continue
 
             break
+
+        #scattered electron in the event
+        el = add_particle( particle(11) )
+        el.stat = 1
+        el.pxyze_prec = 9
+
+        #kinematics for scattered electron in proton beam rest frame
+        phi_p = 2. * TMath.Pi() * self.rand.Rndm() #uniform azimuthal angle
+        elp_p = TMath.Sqrt(en_p**2 - self.me**2) #total momentum
+
+        #set the scattered electron vector in proton beam rest frame
+        px_p = elp_p*TMath.Sin(theta_p)*TMath.Cos(phi_p)
+        py_p = elp_p*TMath.Sin(theta_p)*TMath.Sin(phi_p)
+        pz_p = elp_p*TMath.Cos(theta_p)
+
+        el.vec.SetPxPyPzE(px_p, py_p, pz_p, en_p)
+
+        #transform the scattered electron vector to the laboratory frame, negative z direction
+        el.vec.Boost(-self.pbvec.x(), -self.pbvec.y(), -self.pbvec.z()) # transform to lab
+        el.vec.SetPxPyPzE(el.vec.Px(), el.vec.Py(), -el.vec.Pz(), el.vec.E()) # rotate for pz<0
 
         #tree output with generator kinematics
         self.out.gen_u = u
@@ -141,16 +172,15 @@ class gen_quasi_real_v2:
         self.out.gen_y = y
         self.out.gen_Q2 = Q2
 
-        self.out.gen_theta = theta
-        self.out.gen_E = E
+        #electron kinematics
+        self.out.gen_theta = el.vec.Theta()
+        self.out.gen_E = el.vec.E()
+        self.out.gen_phi = el.vec.Phi()
 
-        #uniform azimuthal angle
-        phi = 2. * TMath.Pi() * self.rand.Rndm()
-        self.out.gen_phi = phi
+        #Q^2 from electron energy and angle
+        self.out.gen_el_Q2 = 2.*self.Ee*el.vec.E()*(1.-TMath.Cos(TMath.Pi()-el.vec.Theta()))
 
-        #put the electron to the event
-        el = add_particle( electron(E, theta, phi) )
-        el.pxyze_prec = 9
+        #print Q2, self.out.gen_el_Q2
 
     #_____________________________________________________________________________
     def eq_II6_uv(self, val):

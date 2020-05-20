@@ -37,7 +37,7 @@ class file_io:
         tlist = ["phot_en", "phot_eta", "phot_phi", "phot_theta", "phot_m"]
         tlist += ["phot_px", "phot_py", "phot_pz"]
         tlist += ["phot_vx", "phot_vy", "phot_vz"]
-        tlist += ["el_en", "el_eta", "el_phi"]
+        tlist += ["el_en", "el_eta", "el_phi", "el_theta"]
         #C structure holding the variables
         struct = "struct tree_out { Double_t "
         for i in tlist: struct += i + ", "
@@ -157,6 +157,7 @@ class file_io:
                 t.el_en     = i.vec.Energy()
                 t.el_eta    = i.vec.Eta()
                 t.el_phi    = i.vec.Phi()
+                t.el_theta  = i.vec.Theta()
 
         #fill the tree
         self.ltree.Fill()
