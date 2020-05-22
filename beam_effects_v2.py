@@ -1,13 +1,14 @@
 
 import ConfigParser
 
-from ROOT import TF1
+import ROOT as rt
+from ROOT import TF1, gROOT, AddressOf
 
 #_____________________________________________________________________________
 class beam_effects_v2:
     #angular divergence and emittance
     #_____________________________________________________________________________
-    def __init__(self, parse):
+    def __init__(self, parse, tree=None):
 
         # flag to use or not use the beam effects
         self.use_beam_effects = False
@@ -44,6 +45,10 @@ class beam_effects_v2:
         print "theta_y =", theta_y
         self.div_y = self.make_gaus("div_y", theta_y)
 
+        #tree output from beam effects
+        tlist = ["beff_vx", "beff_vy", "beff_vz", "beff_tx", "beff_ty"]
+        self.tree_out = self.set_tree(tree, tlist)
+
     #_____________________________________________________________________________
     def apply(self, tracks):
         #apply beam effects
@@ -55,9 +60,16 @@ class beam_effects_v2:
         ypos = self.vtx_y.GetRandom()
         zpos = self.vtx_z.GetRandom()
 
+        self.tree_out.beff_vx = xpos
+        self.tree_out.beff_vy = ypos
+        self.tree_out.beff_vz = zpos
+
         #angular divergence in x and y
         tx = self.div_x.GetRandom()
         ty = self.div_y.GetRandom()
+
+        self.tree_out.beff_tx = tx
+        self.tree_out.beff_ty = ty
 
         #apply to the final particles
         for i in tracks:
@@ -75,8 +87,6 @@ class beam_effects_v2:
             #divergence in y by rotation along x
             i.vec.RotateX(ty)
 
-
-
     #_____________________________________________________________________________
     def make_gaus(self, name, sig):
 
@@ -85,10 +95,29 @@ class beam_effects_v2:
 
         return gx
 
+    #_____________________________________________________________________________
+    def set_tree(self, tree, tlist):
 
+        #set output to the tree
 
+        #tree variables
+        struct = "struct beff2_out { Double_t "
+        for i in tlist:
+            struct += i + ", "
+        struct = struct[:-2] + ";};"
+        gROOT.ProcessLine( struct )
+        tree_out = rt.beff2_out()
 
+        #put zero to all variables
+        for i in tlist:
+            exec("tree_out."+i+"=0")
 
+        #add variables to the tree
+        if tree is not None:
+            for i in tlist:
+                tree.Branch(i, AddressOf(tree_out, i), i+"/D")
+
+        return tree_out
 
 
 

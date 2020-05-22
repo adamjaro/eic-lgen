@@ -58,7 +58,7 @@ def plot_vxy():
 
     hV = ut.prepare_TH2D("hV", xbin, xmin, xmax, ybin, ymin, ymax)
 
-    tree.Draw("phot_vy:phot_vx >> hV")
+    tree.Draw("beff_vy:beff_vx >> hV")
 
     hV.SetXTitle("#it{x} of primary vertex (mm)")
     hV.SetYTitle("#it{y} of primary vertex (mm)")
@@ -144,7 +144,7 @@ def plot_vz():
 
     hV = ut.prepare_TH1D("hV", vbin, vmin, vmax)
 
-    tree.Draw("phot_vz >> hV")
+    tree.Draw("beff_vz >> hV")
 
     hV.SetYTitle("Events / ({0:.3f}".format(vbin)+" mm)")
     hV.SetXTitle("z vertex (mm)")
@@ -154,7 +154,7 @@ def plot_vz():
 
     ut.set_margin_lbtr(gPad, 0.12, 0.09, 0.05, 0.02)
 
-    #ut.invert_col(rt.gPad)
+    ut.invert_col(rt.gPad)
     can.SaveAs("01fig.pdf")
 
 #plot_vz
@@ -172,8 +172,8 @@ def plot_vx():
 
     hV = ut.prepare_TH1D("hV", vbin, vmin, vmax)
 
-    tree.Draw("phot_vx >> hV")
-    #tree.Draw("phot_vy >> hV")
+    tree.Draw("beff_vx >> hV")
+    #tree.Draw("beff_vy >> hV")
 
     hV.SetYTitle("Events / ({0:.3f}".format(vbin)+" mm)")
     hV.SetXTitle("x vertex (mm)")
@@ -360,14 +360,14 @@ def plot_dSigDe():
 #_____________________________________________________________________________
 if __name__ == "__main__":
 
-    #infile = "lgen.root"
-    infile = "/home/jaroslav/sim/lgen/data/lgen_18x275_beff2_10p1Mevt.root"
+    infile = "lgen.root"
+    #infile = "/home/jaroslav/sim/lgen/data/lgen_18x275_beff2_10p1Mevt.root"
 
     gROOT.SetBatch()
     gStyle.SetPadTickX(1)
     gStyle.SetFrameLineWidth(2)
 
-    iplot = 7
+    iplot = 8
     funclist = []
     funclist.append( plot_dSigDe ) # 0
     funclist.append( plot_dSigDy ) # 1

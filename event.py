@@ -56,7 +56,7 @@ class event:
         if parse.has_section("beff") == True:
             self.beff = beam_effects(parse)
         elif parse.has_section("beff2") == True:
-            self.beff = beam_effects_v2(parse)
+            self.beff = beam_effects_v2(parse, self.io.ltree)
 
         #tracks in the event
         self.tracks = []
@@ -109,11 +109,11 @@ class event:
         if self.beff is not None:
             self.beff.apply(self.tracks)
 
-        #ascii event output
+        #ascii event outputs
         self.io.write_dat(self.tracks)
         self.io.write_tx(self.tracks)
 
-        #ROOT output for the photon and scattered electron
+        #ROOT output
         self.io.write_root(self.tracks)
 
     #_____________________________________________________________________________

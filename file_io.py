@@ -2,7 +2,7 @@
 import atexit
 
 import ROOT as rt
-from ROOT import TFile, TTree, gROOT, AddressOf
+from ROOT import TFile, TTree, gROOT, AddressOf, TClonesArray
 
 #_____________________________________________________________________________
 class file_io:
@@ -10,12 +10,36 @@ class file_io:
     #_____________________________________________________________________________
     def __init__(self, parse):
 
+        #create the individual outputs
+        self.set_write_dat = False
+        if parse.has_option("lgen", "write_dat"):
+            self.set_write_dat = parse.getboolean("lgen", "write_dat")
+
+        self.set_write_tx = False
+        if parse.has_option("lgen", "write_tx"):
+            self.set_write_tx = parse.getboolean("lgen", "write_tx")
+
+        self.set_write_root = True
+        if parse.has_option("lgen", "write_root"):
+            self.set_write_root = parse.getboolean("lgen", "write_root")
+
+        if self.set_write_dat: self.make_dat(parse)
+        if self.set_write_tx: self.make_tx(parse)
+
+        self.ltree = None
+        if self.set_write_root: self.make_root(parse)
+
+    #_____________________________________________________________________________
+    def make_dat(self, parse):
+
+        #dat output, Pythia6 format
+
         #name for the output file
-        nam = parse.get("lgen", "nam").strip("\"'")
-        print "Output name:", nam
+        nam = parse.get("lgen", "nam").strip("\"'") + "_evt.dat"
+        print "Dat output name:", nam
 
         #lgen ascii output
-        self.out = open(nam+"_evt.dat", "w")
+        self.out = open(nam, "w")
         #event counter
         self.ievt = 1
         #header for the ascii output
@@ -28,16 +52,29 @@ class file_io:
         header.append(" ============================================")
         for i in header: self.out.write(i+"\n")
 
-        self.tx_out = open(nam+".tx", "w")
+    #_____________________________________________________________________________
+    def make_tx(self, parse):
+
+        #TX output
+
+        nam = parse.get("lgen", "nam").strip("\"'") + ".tx"
+        print "TX output name:", nam
+
+        self.tx_out = open(nam, "w")
         self.tx_ievt = 1
 
+    #_____________________________________________________________________________
+    def make_root(self, parse):
+
         #ROOT output
-        self.out_root = TFile(nam+".root", "RECREATE")
+
+        nam = parse.get("lgen", "nam").strip("\"'") + ".root"
+        print "ROOT output name:", nam
+
+        self.out_root = TFile(nam, "recreate")
         #tree variables, all Double_t
-        tlist = ["phot_en", "phot_eta", "phot_phi", "phot_theta", "phot_m"]
-        tlist += ["phot_px", "phot_py", "phot_pz"]
-        tlist += ["phot_vx", "phot_vy", "phot_vz"]
-        tlist += ["el_en", "el_eta", "el_phi", "el_theta"]
+        tlist = ["phot_en", "phot_theta", "phot_phi"]
+        tlist += ["el_en", "el_theta", "el_phi"]
         #C structure holding the variables
         struct = "struct tree_out { Double_t "
         for i in tlist: struct += i + ", "
@@ -50,11 +87,18 @@ class file_io:
             exec("self.tree_out."+i+"=0")
             self.ltree.Branch(i, AddressOf(self.tree_out, i), i+"/D")
 
-        atexit.register(self.close)
+        #particles array
+        self.particles_out = TClonesArray("TParticle")
+        self.particles_out.SetOwner(True)
+        self.ltree.Branch("particles", self.particles_out)
+
+        atexit.register(self.close_root)
 
     #_____________________________________________________________________________
     def write_dat(self, tracks):
         #ascii output for the event, pythia6 format
+
+        if not self.set_write_dat: return
 
         #write event header to the output
         self.out.write("   0")
@@ -84,6 +128,8 @@ class file_io:
 
         #TX Starlight format
 
+        if not self.set_write_tx: return
+
         #tracks and vertex position in cm
         tracks_tx = []
         vx = 0.
@@ -108,7 +154,6 @@ class file_io:
         self.tx_out.write(evtlin+"\n")
 
         #vertex line
-        #vtxlin = "VERTEX: "+str(vx)+" "+str(vy)+" "+str(vz)+" 0 1 0 0 "+ntrk
         vtxlin = "VERTEX:"
         vtx_prec = 9
         if abs(vx)<1e-9 and abs(vy)<1e-9 and abs(vz)<1e-9:
@@ -128,7 +173,14 @@ class file_io:
 
     #_____________________________________________________________________________
     def write_root(self, tracks):
-        #ROOT output for generated photon (phot) and electron (el)
+
+        #ROOT output
+
+        if not self.set_write_root: return
+
+        #initialize the particles array
+        ipos = 0
+        self.particles_out.Clear("C")
 
         t = self.tree_out
 
@@ -136,41 +188,33 @@ class file_io:
             #select the final photon and electron
             if i.stat != 1: continue
 
+            #put the particles to TParticles clones array
+            i.write_tparticle(self.particles_out, ipos)
+            ipos += 1
+
             #final photon
             if i.pdg == 22:
 
                 t.phot_en    = i.vec.Energy()
-                t.phot_eta   = i.vec.Eta()
-                t.phot_phi   = i.vec.Phi()
                 t.phot_theta = i.vec.Theta()
-                t.phot_m     = i.vec.M()
-                t.phot_px    = i.vec.Px()
-                t.phot_py    = i.vec.Py()
-                t.phot_pz    = i.vec.Pz()
-                t.phot_vx    = i.vx
-                t.phot_vy    = i.vy
-                t.phot_vz    = i.vz
+                t.phot_phi   = i.vec.Phi()
 
             #final electron
             if i.pdg == 11:
 
                 t.el_en     = i.vec.Energy()
-                t.el_eta    = i.vec.Eta()
-                t.el_phi    = i.vec.Phi()
                 t.el_theta  = i.vec.Theta()
+                t.el_phi    = i.vec.Phi()
 
         #fill the tree
         self.ltree.Fill()
 
     #_____________________________________________________________________________
-    def close(self):
-
-        self.out.close()
+    def close_root(self):
 
         self.out_root.Write()
         self.out_root.Close()
 
-        #print "file_io: closed"
 
 
 

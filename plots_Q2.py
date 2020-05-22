@@ -8,8 +8,8 @@ import plot_utils as ut
 #_____________________________________________________________________________
 def main():
 
-    #infile = "lgen.root"
-    infile = "lgen_test1.root"
+    infile = "lgen.root"
+    #infile = "lgen_test1.root"
     #infile = "../lgen/data/lgen_18x275_qr_1p2Mevt.root"
     #infile = "../lgen/data/lgen_18x275_qr_xB_yA_1p2Mevt.root"
     #infile = "../lgen/data/lgen_18x275_qr_xB_yB_1p2Mevt.root"
@@ -18,8 +18,9 @@ def main():
     #infile = "../lgen/data/lgen_18x275_qr_Qa_1p2Mevt.root"
     #infile = "../lgen/data/lgen_18x275_qr_Qb_1p2Mevt.root"
     #infile = "../lgen/data/lgen_18x275_qr_Qc_10p2Mevt.root"
+    #infile = "../lgen/data/lgen_18x275_qr_Qd_beff2_10p2Mevt.root"
 
-    iplot = 13
+    iplot = 7
     funclist = []
     funclist.append( gen_xy ) # 0
     funclist.append( gen_Q2 ) # 1
@@ -86,7 +87,7 @@ def gen_Q2():
 
     hQ2 = ut.prepare_TH1D("hQ2", qbin, qmin, qmax)
 
-    tree.Draw("gen_Q2 >> hQ2")
+    tree.Draw("true_Q2 >> hQ2")
 
     can = ut.box_canvas()
 
@@ -113,7 +114,7 @@ def gen_Log10_Q2():
 
     hLog10Q2 = ut.prepare_TH1D("hLog10Q2", lqbin, lqmin, lqmax)
 
-    tree.Draw("TMath::Log10(gen_Q2) >> hLog10Q2")
+    tree.Draw("TMath::Log10(true_Q2) >> hLog10Q2")
     #tree.Draw("TMath::Log10(gen_el_Q2) >> hLog10Q2")
 
     can = ut.box_canvas()
@@ -200,7 +201,7 @@ def gen_Q2_theta():
 
     hQ2theta = ut.prepare_TH2D("hQ2theta", tbin, tmin, tmax, qbin, qmin, qmax)
 
-    tree.Draw("gen_Q2:gen_theta >> hQ2theta")
+    tree.Draw("true_Q2:gen_theta >> hQ2theta")
 
     can = ut.box_canvas()
 
@@ -275,7 +276,7 @@ def gen_Q2_theta_E():
 
     can = ut.box_canvas()
 
-    tree.Draw("gen_E:gen_Q2:gen_theta >> hQtE")
+    tree.Draw("gen_E:true_Q2:(TMath::Pi()-gen_theta) >> hQtE")
 
     profile = hQtE.Project3DProfile("yx")
 
@@ -326,7 +327,7 @@ def gen_Log10x_Log10y():
 
     #distribution of log_10(x) and log_10(y)
 
-    xbin = 0.1
+    xbin = 0.1 # 2e-2
     xmin = -12
     xmax = 0
 
@@ -377,13 +378,13 @@ def gen_lx_ly_lQ2():
 
     lqbin = 0.1
     lqmin = -9
-    lqmax = 3
+    lqmax = 5
 
     hXYQ2 = ut.prepare_TH3D("hXYQ2", xbin, xmin, xmax, ybin, ymin, ymax, lqbin, lqmin, lqmax)
 
     can = ut.box_canvas()
 
-    tree.Draw("TMath::Log10(gen_Q2):gen_v:gen_u >> hXYQ2")
+    tree.Draw("TMath::Log10(true_Q2):gen_v:gen_u >> hXYQ2")
 
     pXYQ2 = hXYQ2.Project3DProfile("yx")
 

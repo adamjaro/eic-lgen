@@ -74,10 +74,16 @@ class particle:
 
         track_list.append(lin)
 
+    #_____________________________________________________________________________
+    def write_tparticle(self, particles, ipos):
 
+        #write to TParticle clones array
 
+        p = particles.ConstructedAt(ipos)
 
-
+        p.SetMomentum(self.vec)
+        p.SetPdgCode(self.pdg)
+        p.SetProductionVertex(self.vx, self.vy, self.vz, 0)
 
 
 

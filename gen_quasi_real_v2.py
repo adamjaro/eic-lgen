@@ -99,7 +99,7 @@ class gen_quasi_real_v2:
         self.rand.SetSeed(5572323)
 
         #generator event variables in output tree
-        tnam = ["gen_u", "gen_v", "gen_x", "gen_y", "gen_Q2", "gen_theta", "gen_E", "gen_phi"]
+        tnam = ["gen_u", "gen_v", "true_x", "true_y", "true_Q2", "gen_theta", "gen_E", "gen_phi"]
         tnam += ["gen_el_Q2"]
 
         #create the tree variables
@@ -109,6 +109,10 @@ class gen_quasi_real_v2:
         tcmd = tcmd[:-2] + ";};"
         gROOT.ProcessLine( tcmd )
         self.out = rt.gen_out()
+
+        #put zero to all variables
+        for i in tnam:
+            exec("self.out."+i+"=0")
 
         #set the variables in the tree
         if tree is not None:
@@ -168,9 +172,9 @@ class gen_quasi_real_v2:
         #tree output with generator kinematics
         self.out.gen_u = u
         self.out.gen_v = v
-        self.out.gen_x = x
-        self.out.gen_y = y
-        self.out.gen_Q2 = Q2
+        self.out.true_x = x
+        self.out.true_y = y
+        self.out.true_Q2 = Q2
 
         #electron kinematics
         self.out.gen_theta = el.vec.Theta()
