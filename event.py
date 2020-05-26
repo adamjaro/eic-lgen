@@ -13,6 +13,7 @@ from gen_zeus import gen_zeus
 from gen_quasi_real import gen_quasi_real
 from gen_quasi_real_v2 import gen_quasi_real_v2
 from gen_electron_beam import gen_electron_beam
+from gen_read_py import gen_read_py
 
 #_____________________________________________________________________________
 class event:
@@ -47,6 +48,8 @@ class event:
             self.gen = gen_quasi_real_v2(parse, self.io.ltree)
         elif par == "electron-beam":
             self.gen = gen_electron_beam(parse)
+        elif par == "read-py":
+            self.gen = gen_read_py(parse, self.io.ltree)
         else:
             print "Invalid generator specified"
             exit()
