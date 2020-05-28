@@ -18,6 +18,7 @@
 
 import math
 from math import pi
+import atexit
 
 import ROOT as rt
 from ROOT import TF2, Double, TMath, TRandom3, gROOT, AddressOf, TDatabasePDG
@@ -30,11 +31,13 @@ class gen_quasi_real_v2:
     #_____________________________________________________________________________
     def __init__(self, parse, tree):
 
+        print "Quasi-real V2 configuration:"
+
         #electron and proton beam energy, GeV
         self.Ee = parse.getfloat("lgen", "Ee")
         self.Ep = parse.getfloat("lgen", "Ep")
-        print "Ee =", self.Ee
-        print "Ep =", self.Ep
+        print "Ee =", self.Ee, "GeV"
+        print "Ep =", self.Ep, "GeV"
 
         #electron and proton mass
         self.me = TDatabasePDG.Instance().GetParticle(11).Mass()
@@ -53,6 +56,8 @@ class gen_quasi_real_v2:
 
         #center-of-mass squared s, GeV^2
         self.s = self.get_s(self.Ee, self.Ep)
+        print "s =", self.s, "GeV^2"
+        print "sqrt(s) =", TMath.Sqrt(self.s), "GeV"
 
         #range in x and y
         xmin = parse.getfloat("lgen", "xmin")
@@ -119,6 +124,17 @@ class gen_quasi_real_v2:
             for i in tnam:
                 tree.Branch(i, AddressOf(self.out, i), i+"/D")
 
+        #counters for all generated and selected events
+        self.nall = 0
+        self.nsel = 0
+
+        #print generator statistics at the end
+        atexit.register(self.show_stat)
+
+        #total integrated cross section
+        self.sigma_tot = self.eq.Integral(umin, umax, vmin, vmax)
+        print "Total integrated cross section for a given x and y range:", self.sigma_tot, "mb"
+
         print "Quasi-real photoproduction version 2 initialized"
 
     #_____________________________________________________________________________
@@ -140,12 +156,19 @@ class gen_quasi_real_v2:
             en_p = self.Ee_p*(1 - y)
             theta_p = 2 * TMath.ASin( 0.5*TMath.Sqrt(x*y*self.s/((1-y)*self.Ee_p**2)) )
 
+            #prevent unphysical energy and angle
+            if theta_p < 0. or theta_p > pi: continue
+            if en_p**2 < self.me**2: continue
+
             #event Q^2
             Q2 = x*y*self.s
 
+            self.nall += 1 # increment all events counter
+
+            #select the range in Q^2
             if Q2 < self.Q2min or Q2 > self.Q2max: continue
-            if theta_p < 0. or theta_p > pi: continue
-            if en_p**2 < self.me**2: continue
+
+            self.nsel += 1 # increment selected counter
 
             break
 
@@ -215,6 +238,18 @@ class gen_quasi_real_v2:
         #print "sqrt(s):", TMath.Sqrt(s)
 
         return s
+
+    #_____________________________________________________________________________
+    def show_stat(self):
+
+        #print generator statistics at the end
+        print "Total generated events:", self.nall
+        print "Selected events:", self.nsel
+
+        if self.nall <= 0: return
+
+        print "Cross section of generated sample:", self.sigma_tot*float(self.nsel)/float(self.nall), "mb"
+
 
 
 
