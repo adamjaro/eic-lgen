@@ -16,12 +16,17 @@ class gen_zeus:
         #proton beam, GeV
         self.Ep = Ep
 
+        print "Ee =", self.Ee, "GeV"
+        print "Ep =", self.Ep, "GeV"
+
         #minimal photon energy, GeV
         self.emin = parse.getfloat("lgen", "emin")
         print "emin =", self.emin
 
         #maximal photon angle
         self.tmax = 1.5e-3
+        if parse.has_option("lgen", "tmax"):
+            self.tmax = parse.getfloat("lgen", "tmax")
 
         #electron and proton mass
         self.me = TDatabasePDG.Instance().GetParticle(11).Mass()

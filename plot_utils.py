@@ -101,6 +101,17 @@ def set_H1D_col(hx, col):
     hx.SetLineColor(col);
 
 #_____________________________________________________________________________
+def set_F1(fx, col=rt.kRed):
+
+    fx.SetLineWidth(3)
+    fx.SetNpx(1000)
+    fx.SetTitle("")
+
+    fx.SetLineColor(col)
+
+#set_F1
+
+#_____________________________________________________________________________
 def set_axis(axis):
 
     axis.SetTextFont(42)
@@ -514,9 +525,10 @@ def print_pad(pad):
   print "#####################"
 
 #_____________________________________________________________________________
-def invert_col(pad, fgcol=rt.kAzure, bgcol=rt.kBlack):
+def invert_col(pad, fgcol=rt.kGreen, bgcol=rt.kBlack):
 
    #set foreground and background color
+   #fgcol = rt.kAzure
    #fgcol = rt.kGreen
    #fgcol = rt.kOrange-3
 

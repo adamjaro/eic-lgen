@@ -8,7 +8,7 @@ import plot_utils as ut
 #_____________________________________________________________________________
 def main():
 
-    infile = "lgen.root"
+    #infile = "lgen.root"
     #infile = "lgen_test1.root"
     #infile = "../lgen/data/lgen_18x275_qr_1p2Mevt.root"
     #infile = "../lgen/data/lgen_18x275_qr_xB_yA_1p2Mevt.root"
@@ -19,8 +19,10 @@ def main():
     #infile = "../lgen/data/lgen_18x275_qr_Qb_1p2Mevt.root"
     #infile = "../lgen/data/lgen_18x275_qr_Qc_10p2Mevt.root"
     #infile = "../lgen/data/lgen_18x275_qr_Qd_beff2_10p2Mevt.root"
+    infile = "../lgen/data/lgen_18x275_qr_Qd_beff2_5Mevt.root"
+    #infile = "../lgen/data/lgen_18x275_qr_Qe_beff2_5Mevt.root"
 
-    iplot = 7
+    iplot = 3
     funclist = []
     funclist.append( gen_xy ) # 0
     funclist.append( gen_Q2 ) # 1
@@ -108,9 +110,9 @@ def gen_Log10_Q2():
 
     #plot the log_10(Q^2)
 
-    lqbin = 0.1
+    lqbin = 0.02
     lqmin = -11
-    lqmax = 5
+    lqmax = 6
 
     hLog10Q2 = ut.prepare_TH1D("hLog10Q2", lqbin, lqmin, lqmax)
 
@@ -152,6 +154,8 @@ def gen_E():
     hE.Draw()
 
     gPad.SetLogy()
+
+    gPad.SetGrid()
 
     ut.invert_col(rt.gPad)
     can.SaveAs("01fig.pdf")
@@ -259,18 +263,17 @@ def gen_Q2_theta_E():
 
     #Q^2 relative to theta and energy
 
-    qbin = 1e-3
+    qbin = 0.035
     qmin = 0
-    qmax = 0.45
-    #qmax = 1e-2
+    qmax = 3.2
 
-    tbin = 2e-4
+    tbin = 1.5e-3
     tmin = 0
-    tmax = 0.04
+    tmax = 0.1
 
     ebin = 0.1
-    emin = 0
-    emax = 20
+    emin = 0.1
+    emax = 18
 
     hQtE = ut.prepare_TH3D("hQtE", tbin, tmin, tmax, qbin, qmin, qmax, ebin, emin, emax)
 
@@ -280,7 +283,7 @@ def gen_Q2_theta_E():
 
     profile = hQtE.Project3DProfile("yx")
 
-    profile.SetXTitle("Electron polar angle #theta (rad)")
+    profile.SetXTitle("Electron scattering angle #theta (rad)")
     profile.SetYTitle("#it{Q}^{2} (GeV^{2})")
     profile.SetZTitle("Electron energy E_{e^{-}} (GeV)")
     profile.SetTitle("")
@@ -288,11 +291,13 @@ def gen_Q2_theta_E():
     profile.SetTitleOffset(1.3, "X")
     profile.SetTitleOffset(1.4, "Z")
 
-    ut.set_margin_lbtr(gPad, 0.12, 0.1, 0.03, 0.15)
+    ut.set_margin_lbtr(gPad, 0.1, 0.1, 0.03, 0.15)
+
+    profile.SetContour(300)
 
     profile.Draw("colz")
 
-    ut.invert_col(rt.gPad)
+    #ut.invert_col(rt.gPad)
     can.SaveAs("01fig.pdf")
 
 #gen_Q2_theta_E
@@ -327,11 +332,11 @@ def gen_Log10x_Log10y():
 
     #distribution of log_10(x) and log_10(y)
 
-    xbin = 0.1 # 2e-2
+    xbin = 0.05 # 2e-2
     xmin = -12
     xmax = 0
 
-    ybin = 0.1
+    ybin = 0.02
     ymin = -4.5
     ymax = 0
 
@@ -368,17 +373,17 @@ def gen_lx_ly_lQ2():
 
     #distribution of log_10(x), log_10(y) and log_10(Q^2)
 
-    xbin = 0.1
+    xbin = 0.05
     xmin = -12
     xmax = 0
 
-    ybin = 0.1
+    ybin = 0.02
     ymin = -4.5
     ymax = 0
 
     lqbin = 0.1
     lqmin = -9
-    lqmax = 5
+    lqmax = 4.3
 
     hXYQ2 = ut.prepare_TH3D("hXYQ2", xbin, xmin, xmax, ybin, ymin, ymax, lqbin, lqmin, lqmax)
 

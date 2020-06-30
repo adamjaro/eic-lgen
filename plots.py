@@ -3,10 +3,60 @@
 import ROOT as rt
 from ROOT import gPad, gROOT, gStyle, TFile, gSystem
 
+import ConfigParser
+
 from gen_zeus import gen_zeus
 from gen_h1 import gen_h1
 
 import plot_utils as ut
+
+#_____________________________________________________________________________
+def plot_dSigDe_all():
+
+    # dSigma / dEgamma over all energies, ZEUS parametrization
+
+    parse = ConfigParser.RawConfigParser()
+    parse.add_section("lgen")
+    parse.set("lgen", "emin", "0.5") # GeV
+
+    sig_top = gen_zeus(18, 275, parse).dSigDe # Ee, Ep, GeV
+    sig_mid = gen_zeus(10, 110, parse).dSigDe
+    sig_low = gen_zeus(5, 41, parse).dSigDe
+
+    gStyle.SetPadTickY(1)
+    can = ut.box_canvas()
+
+    frame = gPad.DrawFrame(0.1, 1, 19, 80)
+    frame.Draw()
+
+    ut.set_F1(sig_top)
+    ut.set_F1(sig_mid, rt.kYellow+1)
+    ut.set_F1(sig_low, rt.kBlue)
+
+    sig_top.Draw("same")
+    sig_mid.Draw("same")
+    sig_low.Draw("same")
+
+    ytit = "d#sigma / d#it{E}_{#gamma} (mb/GeV)"
+    xtit = "#it{E}_{#gamma} (GeV)"
+    ut.put_yx_tit(frame, ytit, xtit, 1.6, 1.4)
+
+    ut.set_margin_lbtr(gPad, 0.12, 0.1, 0.01, 0.01)
+
+    frame.GetYaxis().SetMoreLogLabels()
+
+    leg = ut.prepare_leg(0.65, 0.77, 0.24, 0.16, 0.035) # x, y, dx, dy, tsiz
+    leg.AddEntry(sig_top, "18 #times 275 GeV", "l")
+    leg.AddEntry(sig_mid, "10 #times 100 GeV", "l")
+    leg.AddEntry(sig_low, "5 #times 41 GeV", "l")
+    leg.Draw("same")
+
+    gPad.SetLogy()
+
+    ut.invert_col(gPad)
+    can.SaveAs("01fig.pdf")
+
+#plot_dSigDe_all
 
 #_____________________________________________________________________________
 def plot_el_en():
@@ -317,8 +367,10 @@ def plot_dSigDe():
 
     # dSigma / dEgamma according to ZEUS parametrization
 
-    #gen = gen_zeus(27.6, 920) # Ee, Ep, GeV
-    gen = gen_zeus(18, 275, 6) # Ee, Ep, Emin, GeV
+    parse = ConfigParser.RawConfigParser()
+    parse.add_section("lgen")
+    parse.set("lgen", "emin", "6") # GeV
+    gen = gen_zeus(18, 275, parse) # Ee, Ep, GeV
     sig = gen.dSigDe
 
     gStyle.SetPadTickY(1)
@@ -354,7 +406,7 @@ def plot_dSigDe():
     leg.AddEntry(None, "#it{E}_{p} = 275 GeV", "")
     leg.Draw("same")
 
-    #ut.invert_col(gPad)
+    ut.invert_col(gPad)
     can.SaveAs("01fig.pdf")
 
 #_____________________________________________________________________________
@@ -367,7 +419,7 @@ if __name__ == "__main__":
     gStyle.SetPadTickX(1)
     gStyle.SetFrameLineWidth(2)
 
-    iplot = 8
+    iplot = 10
     funclist = []
     funclist.append( plot_dSigDe ) # 0
     funclist.append( plot_dSigDy ) # 1
@@ -379,6 +431,7 @@ if __name__ == "__main__":
     funclist.append( plot_theta_SigTheta ) # 7
     funclist.append( plot_vxy ) # 8
     funclist.append( plot_el_en ) # 9
+    funclist.append( plot_dSigDe_all ) # 10
 
     #open the input
     inp = TFile.Open(infile)
