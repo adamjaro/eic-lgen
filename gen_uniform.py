@@ -37,7 +37,7 @@ class gen_uniform:
         en = self.emin + (self.emax - self.emin) * self.rand.Rndm()
         self.out.gen_E = en
 
-        print en
+        #print en
 
         #make the photon
         phot = particle(22)
