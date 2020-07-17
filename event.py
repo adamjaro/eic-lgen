@@ -15,6 +15,7 @@ from gen_quasi_real_v2 import gen_quasi_real_v2
 from gen_electron_beam import gen_electron_beam
 from gen_read_py import gen_read_py
 from gen_uniform import gen_uniform
+from gen_Lifshitz_93p16 import gen_Lifshitz_93p16
 
 #_____________________________________________________________________________
 class event:
@@ -53,6 +54,8 @@ class event:
             self.gen = gen_read_py(parse, self.io.ltree)
         elif par == "uniform":
             self.gen = gen_uniform(parse, self.io.ltree)
+        elif par == "Lifshitz_93p16":
+            self.gen = gen_Lifshitz_93p16(parse, self.io.ltree)
         else:
             print "Invalid generator specified"
             exit()

@@ -11,6 +11,91 @@ from gen_h1 import gen_h1
 import plot_utils as ut
 
 #_____________________________________________________________________________
+def plot_delta():
+
+    #photon delta
+
+    dbin = 0.01
+    dmin = 0
+    dmax = 1.5
+
+    can = ut.box_canvas()
+
+    hD = ut.prepare_TH1D("hD", dbin, dmin, dmax)
+
+    tree.Draw("phot_delta >> hD")
+
+    ut.set_margin_lbtr(gPad, 0.14, 0.1, 0.02, 0.01)
+
+    hD.Draw()
+
+    gPad.SetLogy()
+
+    ut.invert_col(rt.gPad)
+    can.SaveAs("01fig.pdf")
+
+#plot_delta
+
+#_____________________________________________________________________________
+def plot_w():
+
+    #photon w
+
+    wbin = 1
+    wmin = 0
+    wmax = 200
+
+    can = ut.box_canvas()
+
+    hW = ut.prepare_TH1D("hW", wbin, wmin, wmax)
+
+    tree.Draw("phot_w >> hW")
+
+    ut.set_margin_lbtr(gPad, 0.14, 0.1, 0.02, 0.01)
+
+    hW.Draw()
+
+    gPad.SetLogy()
+
+    ut.invert_col(rt.gPad)
+    can.SaveAs("01fig.pdf")
+
+#plot_w
+
+#_____________________________________________________________________________
+def plot_w_delta():
+
+    #photon w and delta
+
+    wbin = 0.1
+    wmax = 5
+
+    dbin = 0.1
+    dmax = 5
+
+    can = ut.box_canvas()
+
+    hWD = ut.prepare_TH2D("hWD", dbin, 0, dmax, wbin, 0, wmax)
+
+    #tree.Draw("phot_w:phot_delta >> hWD") # y:x
+    tree.Draw("TMath::Log10(phot_w):TMath::Log10(phot_delta) >> hWD") # y:x
+
+    hWD.SetXTitle("log(#delta)")
+    hWD.SetYTitle("log(w)")
+
+    hWD.SetTitleOffset(1.6, "Y")
+    hWD.SetTitleOffset(1.3, "X")
+
+    ut.set_margin_lbtr(gPad, 0.11, 0.1, 0.02, 0.13)
+
+    #gPad.SetLogz()
+
+    ut.invert_col(rt.gPad)
+    can.SaveAs("01fig.pdf")
+
+#plot_w_delta
+
+#_____________________________________________________________________________
 def plot_dSigDe_all():
 
     # dSigma / dEgamma over all energies, ZEUS parametrization
@@ -419,7 +504,7 @@ if __name__ == "__main__":
     gStyle.SetPadTickX(1)
     gStyle.SetFrameLineWidth(2)
 
-    iplot = 10
+    iplot = 13
     funclist = []
     funclist.append( plot_dSigDe ) # 0
     funclist.append( plot_dSigDy ) # 1
@@ -432,6 +517,9 @@ if __name__ == "__main__":
     funclist.append( plot_vxy ) # 8
     funclist.append( plot_el_en ) # 9
     funclist.append( plot_dSigDe_all ) # 10
+    funclist.append( plot_w_delta ) # 11
+    funclist.append( plot_w ) # 12
+    funclist.append( plot_delta ) # 13
 
     #open the input
     inp = TFile.Open(infile)
