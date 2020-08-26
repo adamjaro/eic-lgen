@@ -525,7 +525,7 @@ def print_pad(pad):
   print "#####################"
 
 #_____________________________________________________________________________
-def invert_col(pad, fgcol=rt.kGreen, bgcol=rt.kBlack):
+def invert_col(pad, fgcol=rt.kOrange-3, bgcol=rt.kBlack):
 
    #set foreground and background color
    #fgcol = rt.kAzure

@@ -15,9 +15,9 @@ def plot_delta():
 
     #photon delta
 
-    dbin = 0.01
+    dbin = 1
     dmin = 0
-    dmax = 1.5
+    dmax = 110
 
     can = ut.box_canvas()
 
@@ -41,9 +41,9 @@ def plot_w():
 
     #photon w
 
-    wbin = 1
+    wbin = 10
     wmin = 0
-    wmax = 200
+    wmax = 12000
 
     can = ut.box_canvas()
 
@@ -67,15 +67,16 @@ def plot_w_delta():
 
     #photon w and delta
 
-    wbin = 0.1
-    wmax = 5
+    wbin = 0.02
+    wmin = 1
+    wmax = 4
 
-    dbin = 0.1
-    dmax = 5
+    dbin = 0.02
+    dmax = 2.5
 
     can = ut.box_canvas()
 
-    hWD = ut.prepare_TH2D("hWD", dbin, 0, dmax, wbin, 0, wmax)
+    hWD = ut.prepare_TH2D("hWD", dbin, 0, dmax, wbin, wmin, wmax)
 
     #tree.Draw("phot_w:phot_delta >> hWD") # y:x
     tree.Draw("TMath::Log10(phot_w):TMath::Log10(phot_delta) >> hWD") # y:x
@@ -87,6 +88,9 @@ def plot_w_delta():
     hWD.SetTitleOffset(1.3, "X")
 
     ut.set_margin_lbtr(gPad, 0.11, 0.1, 0.02, 0.13)
+
+    hWD.SetMinimum(0.98)
+    hWD.SetContour(300)
 
     #gPad.SetLogz()
 
@@ -366,7 +370,7 @@ def plot_theta():
     #polar angle of generated photons
 
     tbin = 0.01
-    tmax = 0.8
+    tmax = 3
 
     can = ut.box_canvas()
 
@@ -497,14 +501,16 @@ def plot_dSigDe():
 #_____________________________________________________________________________
 if __name__ == "__main__":
 
-    infile = "lgen.root"
+    #infile = "lgen.root"
     #infile = "/home/jaroslav/sim/lgen/data/lgen_18x275_beff2_10p1Mevt.root"
+    #infile = "/home/jaroslav/sim/lgen/data/lgen_18x275_Lif_0p1GeV_5Mevt.root"
+    infile = "/home/jaroslav/sim/lgen/data/lgen_18x275_Au_Lif_0p1GeV_5Mevt.root"
 
     gROOT.SetBatch()
     gStyle.SetPadTickX(1)
     gStyle.SetFrameLineWidth(2)
 
-    iplot = 13
+    iplot = 11
     funclist = []
     funclist.append( plot_dSigDe ) # 0
     funclist.append( plot_dSigDy ) # 1

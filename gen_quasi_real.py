@@ -80,6 +80,10 @@ class gen_quasi_real:
             for i in tnam:
                 tree.Branch(i, AddressOf(self.out, i), i+"/D")
 
+        #total integrated cross section
+        self.sigma_tot = self.eq.Integral(xmin, xmax, ymin, ymax)
+        print "Total integrated cross section for a given x and y range:", self.sigma_tot, "mb"
+
         print "Quasi-real photoproduction initialized"
 
     #_____________________________________________________________________________

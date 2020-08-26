@@ -19,10 +19,12 @@ def main():
     #infile = "../lgen/data/lgen_18x275_qr_Qb_1p2Mevt.root"
     #infile = "../lgen/data/lgen_18x275_qr_Qc_10p2Mevt.root"
     #infile = "../lgen/data/lgen_18x275_qr_Qd_beff2_10p2Mevt.root"
-    infile = "../lgen/data/lgen_18x275_qr_Qd_beff2_5Mevt.root"
+    #infile = "../lgen/data/lgen_18x275_qr_Qd_beff2_5Mevt.root"
     #infile = "../lgen/data/lgen_18x275_qr_Qe_beff2_5Mevt.root"
+    #infile = "../lgen/data/lgen_10x100_qr_Qe_5Mevt.root"
+    infile = "../lgen/data/lgen_5x41_qr_Qe_5Mevt.root"
 
-    iplot = 3
+    iplot = 16
     funclist = []
     funclist.append( gen_xy ) # 0
     funclist.append( gen_Q2 ) # 1
@@ -38,6 +40,9 @@ def main():
     funclist.append( rel_gen_Q2_el_Q2 ) # 11
     funclist.append( gen_phi ) # 12
     funclist.append( rel_gen_Q2_beff_el_Q2 ) # 13
+    funclist.append( gen_ys ) # 14
+    funclist.append( gamma_p_ys ) # 15
+    funclist.append( gamma_p_sqrt_ys ) # 16
 
     inp = TFile.Open(infile)
     global tree
@@ -569,6 +574,120 @@ def rel_gen_Q2_beff_el_Q2():
     can.SaveAs("01fig.pdf")
 
 #rel_gen_Q2_beff_el_Q2
+
+#_____________________________________________________________________________
+def gen_ys():
+
+    #CM energy s * generated y as input to gamma-p total cross section
+
+    sqrt_s = 28.6 # GeV
+
+    #ys range
+    ysbin = 0.1
+    ysmin = 0
+    ysmax = 30
+
+    hYS = ut.prepare_TH1D("hYS", ysbin, ysmin, ysmax)
+
+    tree.Draw("true_y*"+str(sqrt_s)+" >> hYS")
+
+    can = ut.box_canvas()
+
+    ut.put_yx_tit(hYS, "Events", "#ys (GeV^{2})", 1.4, 1.2)
+
+    hYS.Draw()
+
+    gPad.SetLogy()
+
+    ut.invert_col(rt.gPad)
+    can.SaveAs("01fig.pdf")
+
+#gen_ys
+
+#_____________________________________________________________________________
+def gamma_p_ys():
+
+    #distribution of total gamma-proton cross section over a given CM energy s and generated y
+
+    sqrt_s = 28.6 # GeV
+
+    #gamma-p range
+    gpbin = 0.01
+    gpmin = 0
+    gpmax = 1
+
+    hGP = ut.prepare_TH1D("hGP", gpbin, gpmin, gpmax)
+
+    scm = sqrt_s**2
+    form = "0.0677*TMath::Power((true_y*"+str(scm)+"), 0.0808)"
+    form += "+0.129*TMath::Power((true_y*"+str(scm)+"), -0.4525)"
+
+    #print form
+
+    tree.Draw(form+" >> hGP")
+
+    can = ut.box_canvas()
+
+    ut.put_yx_tit(hGP, "Events", "#sigma(#gamma p) (mb)", 1.4, 1.2)
+
+    hGP.Draw()
+
+    gPad.SetLogy()
+
+    ut.invert_col(rt.gPad)
+    can.SaveAs("01fig.pdf")
+
+#gamma_p_ys
+
+#_____________________________________________________________________________
+def gamma_p_sqrt_ys():
+
+    #total gamma-proton cross section as a function of sqrt(sy), the CM energy s and generated y
+
+    #sqrt_s = 140.7 # GeV, 18x275
+    #sqrt_s = 63.3 # GeV, 10x100
+    sqrt_s = 28.6 # GeV, 5x41
+
+    #sqrt(sy) range
+    sybin = 0.1
+    symin = 0
+    symax = 160
+
+    #cross section range
+    sigbin = 0.01
+    sigmin = 0
+    sigmax = 0.5
+
+    hGPys = ut.prepare_TH2D("hGPys", sybin, symin, symax, sigbin, sigmin, sigmax)
+
+    #cross section formula
+    scm = sqrt_s**2
+    sig_form = "0.0677*TMath::Power((true_y*"+str(scm)+"), 0.0808)"
+    sig_form += "+0.129*TMath::Power((true_y*"+str(scm)+"), -0.4525)"
+
+    #sqrt(sy) formula
+    syform = "TMath::Sqrt(true_y*"+str(scm)+")"
+
+    #print sig_form
+    #print syform
+
+    tree.Draw("("+sig_form+"):("+syform+") >> hGPys")
+
+    can = ut.box_canvas()
+
+    ut.put_yx_tit(hGPys, "#sigma(#gamma p) (mb)", "#sqrt{ys}", 1.4, 1.2)
+
+    hGPys.Draw()
+
+    gPad.SetGrid()
+
+    gPad.SetLogx()
+
+    ut.invert_col(rt.gPad)
+    can.SaveAs("01fig.pdf")
+
+#gamma_p_sqrt_ys
+
 
 #_____________________________________________________________________________
 if __name__ == "__main__":
