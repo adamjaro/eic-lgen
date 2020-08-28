@@ -22,9 +22,14 @@ def main():
     #infile = "../lgen/data/lgen_18x275_qr_Qd_beff2_5Mevt.root"
     #infile = "../lgen/data/lgen_18x275_qr_Qe_beff2_5Mevt.root"
     #infile = "../lgen/data/lgen_10x100_qr_Qe_5Mevt.root"
-    infile = "../lgen/data/lgen_5x41_qr_Qe_5Mevt.root"
+    #infile = "../lgen/data/lgen_5x41_qr_Qe_5Mevt.root"
+    #infile = "../lgen/data/lgen_py_18x275_Q2all_5Mevt.root"
+    #infile = "../lgen/data/lgen_py_18x275_Q2all_100kevt.root"
+    #infile = "../lgen/data/lgen_py_5x50_Q2all_5Mevt.root"
+    #infile = "../lgen/data/lgen_py_5x41_Q2all_5Mevt.root"
+    infile = "../lgen/data/lgen_py_10x100_Q2all_5Mevt.root"
 
-    iplot = 16
+    iplot = 17
     funclist = []
     funclist.append( gen_xy ) # 0
     funclist.append( gen_Q2 ) # 1
@@ -43,6 +48,7 @@ def main():
     funclist.append( gen_ys ) # 14
     funclist.append( gamma_p_ys ) # 15
     funclist.append( gamma_p_sqrt_ys ) # 16
+    funclist.append( gen_true_lx_ly ) # 17
 
     inp = TFile.Open(infile)
     global tree
@@ -644,9 +650,9 @@ def gamma_p_sqrt_ys():
 
     #total gamma-proton cross section as a function of sqrt(sy), the CM energy s and generated y
 
-    #sqrt_s = 140.7 # GeV, 18x275
+    sqrt_s = 140.7 # GeV, 18x275
     #sqrt_s = 63.3 # GeV, 10x100
-    sqrt_s = 28.6 # GeV, 5x41
+    #sqrt_s = 28.6 # GeV, 5x41
 
     #sqrt(sy) range
     sybin = 0.1
@@ -688,6 +694,45 @@ def gamma_p_sqrt_ys():
 
 #gamma_p_sqrt_ys
 
+#_____________________________________________________________________________
+def gen_true_lx_ly():
+
+    #generator true log_10(y) and log_10(x)
+
+    xbin = 0.05 # 2e-2
+    xmin = -12
+    xmax = 0
+
+    ybin = 0.02
+    ymin = -4.5
+    ymax = 0
+
+    hXY = ut.prepare_TH2D("hXY", xbin, xmin, xmax, ybin, ymin, ymax)
+
+    can = ut.box_canvas()
+
+    tree.Draw("TMath::Log10(true_y):TMath::Log10(true_x) >> hXY")
+
+    ytit = "log_{10}(#it{y})"+" / {0:.3f}".format(ybin)
+    xtit = "log_{10}(#it{x})"+" / {0:.3f}".format(xbin)
+    ut.put_yx_tit(hXY, ytit, xtit, 1.4, 1.4)
+
+    ut.set_margin_lbtr(gPad, 0.1, 0.11, 0.03, 0.12)
+
+    hXY.Draw()
+
+    hXY.SetMinimum(0.98)
+    hXY.SetContour(300)
+
+    gPad.SetGrid()
+
+    #gPad.SetLogy()
+    gPad.SetLogz()
+
+    ut.invert_col(rt.gPad)
+    can.SaveAs("01fig.pdf")
+
+#gen_true_lx_ly
 
 #_____________________________________________________________________________
 if __name__ == "__main__":
