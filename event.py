@@ -1,5 +1,6 @@
 
 import ConfigParser
+from sys import stdout
 from ROOT import TLorentzVector
 
 from photon import photon
@@ -81,6 +82,7 @@ class event:
         for i in xrange(nev):
             if i%100000 == 0:
                 print "Generating event:", i
+                stdout.flush()
             self.generate()
 
         print "All done"
