@@ -21,15 +21,15 @@ def main():
     #infile = "../lgen/data/lgen_18x275_qr_Qd_beff2_10p2Mevt.root"
     #infile = "../lgen/data/lgen_18x275_qr_Qd_beff2_5Mevt.root"
     #infile = "../lgen/data/lgen_18x275_qr_Qe_beff2_5Mevt.root"
-    #infile = "../lgen/data/lgen_10x100_qr_Qe_5Mevt.root"
-    #infile = "../lgen/data/lgen_5x41_qr_Qe_5Mevt.root"
+    #infile = "../lgen/data/lgen_10x100_qr_5Mevt.root"
+    infile = "../lgen/data/lgen_5x41_qr_5Mevt.root"
     #infile = "../lgen/data/lgen_py_18x275_Q2all_5Mevt.root"
     #infile = "../lgen/data/lgen_py_18x275_Q2all_100kevt.root"
     #infile = "../lgen/data/lgen_py_5x50_Q2all_5Mevt.root"
     #infile = "../lgen/data/lgen_py_5x41_Q2all_5Mevt.root"
-    infile = "../lgen/data/lgen_py_10x100_Q2all_5Mevt.root"
+    #infile = "../lgen/data/lgen_py_10x100_Q2all_5Mevt.root"
 
-    iplot = 17
+    iplot = 2
     funclist = []
     funclist.append( gen_xy ) # 0
     funclist.append( gen_Q2 ) # 1

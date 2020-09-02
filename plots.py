@@ -510,7 +510,7 @@ if __name__ == "__main__":
     gStyle.SetPadTickX(1)
     gStyle.SetFrameLineWidth(2)
 
-    iplot = 11
+    iplot = 10
     funclist = []
     funclist.append( plot_dSigDe ) # 0
     funclist.append( plot_dSigDy ) # 1
