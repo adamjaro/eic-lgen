@@ -22,14 +22,14 @@ def main():
     #infile = "../lgen/data/lgen_18x275_qr_Qd_beff2_5Mevt.root"
     #infile = "../lgen/data/lgen_18x275_qr_Qe_beff2_5Mevt.root"
     #infile = "../lgen/data/lgen_10x100_qr_5Mevt.root"
-    infile = "../lgen/data/lgen_5x41_qr_5Mevt.root"
-    #infile = "../lgen/data/lgen_py_18x275_Q2all_5Mevt.root"
+    #infile = "../lgen/data/lgen_5x41_qr_5Mevt.root"
+    infile = "../lgen/data/lgen_py_18x275_Q2all_5Mevt.root"
     #infile = "../lgen/data/lgen_py_18x275_Q2all_100kevt.root"
     #infile = "../lgen/data/lgen_py_5x50_Q2all_5Mevt.root"
     #infile = "../lgen/data/lgen_py_5x41_Q2all_5Mevt.root"
     #infile = "../lgen/data/lgen_py_10x100_Q2all_5Mevt.root"
 
-    iplot = 2
+    iplot = 22
     funclist = []
     funclist.append( gen_xy ) # 0
     funclist.append( gen_Q2 ) # 1
@@ -49,6 +49,11 @@ def main():
     funclist.append( gamma_p_ys ) # 15
     funclist.append( gamma_p_sqrt_ys ) # 16
     funclist.append( gen_true_lx_ly ) # 17
+    funclist.append( gen_true_lx ) # 18
+    funclist.append( gen_true_ly ) # 19
+    funclist.append( gen_true_W ) # 20
+    funclist.append( gen_el_en_log10_theta ) # 21
+    funclist.append( gen_el_en_log10_theta_lQ2 ) # 22
 
     inp = TFile.Open(infile)
     global tree
@@ -156,7 +161,8 @@ def gen_E():
 
     hE = ut.prepare_TH1D("hE", ebin, emin, emax)
 
-    tree.Draw("gen_E >> hE")
+    #tree.Draw("gen_E >> hE")
+    tree.Draw("el_en >> hE")
 
     can = ut.box_canvas()
 
@@ -735,6 +741,202 @@ def gen_true_lx_ly():
 #gen_true_lx_ly
 
 #_____________________________________________________________________________
+def gen_true_lx():
+
+    #generator true log_10(x)
+
+    #lx range
+    xbin = 0.1
+    xmin = -12
+    xmax = 0
+
+    hX = ut.prepare_TH1D("hX", xbin, xmin, xmax)
+
+    tree.Draw("TMath::Log10(true_x) >> hX")
+
+    can = ut.box_canvas()
+
+    ut.put_yx_tit(hX, "Events", "x", 1.4, 1.2)
+
+    hX.Draw()
+
+    gPad.SetGrid()
+
+    ut.invert_col(rt.gPad)
+    can.SaveAs("01fig.pdf")
+
+#gen_true_lx
+
+#_____________________________________________________________________________
+def gen_true_ly():
+
+    #generator true log_10(y)
+
+    #ly range
+    ybin = 0.05
+    ymin = -5
+    ymax = 0
+
+    hY = ut.prepare_TH1D("hY", ybin, ymin, ymax)
+
+    tree.Draw("TMath::Log10(true_y) >> hY")
+
+    can = ut.box_canvas()
+
+    ut.put_yx_tit(hY, "Events", "y", 1.4, 1.2)
+
+    hY.Draw()
+
+    gPad.SetGrid()
+
+    ut.invert_col(rt.gPad)
+    can.SaveAs("01fig.pdf")
+
+#gen_true_ly
+
+#_____________________________________________________________________________
+def gen_true_W():
+
+    #generator true W = sqrt( ys(1-x) ) with true x and y
+
+    # GeV^2
+    #scm = 19800.8 # 18x275
+    scm = 820.8 # 5x41
+
+    #W range
+    wbin = 0.1
+    wmin = 0
+    wmax = 150
+
+    hW = ut.prepare_TH1D("hW", wbin, wmin, wmax)
+    hW2 = ut.prepare_TH1D("hW2", wbin, wmin, wmax)
+
+    form = "TMath::Sqrt(true_y*"+str(scm)+"*(1.-true_x))"
+    form2 = "TMath::Sqrt(true_y*"+str(scm)+")"
+
+    tree.Draw(form+" >> hW")
+    tree.Draw(form2+" >> hW2")
+
+    can = ut.box_canvas()
+
+    ut.put_yx_tit(hW, "Events", "W (GeV)", 1.4, 1.2)
+
+    #ut.set_H1D_col(hW2, rt.kRed)
+    ut.line_h1(hW)
+    ut.line_h1(hW2, rt.kRed)
+
+
+    hW.Draw()
+    hW2.Draw("e1same")
+
+    gPad.SetGrid()
+    gPad.SetLogy()
+    gPad.SetLogx()
+
+    ut.invert_col(rt.gPad)
+    can.SaveAs("01fig.pdf")
+
+#gen_true_W
+
+#_____________________________________________________________________________
+def gen_el_en_log10_theta():
+
+    #electron energy and scattering angle
+
+    #bins in log_10(theta)
+    ltbin = 0.2
+    ltmin = -8
+    #ltmax = -1.2
+    ltmax = 1
+
+    #bins in energy
+    ebin = 0.4
+    emin = 0
+    emax = 21
+
+    can = ut.box_canvas()
+
+    hEnTheta = ut.prepare_TH2D("hEnTheta", ltbin, ltmin, ltmax, ebin, emin, emax)
+
+    form = "el_en:TMath::Log10(TMath::Pi()-el_theta)"
+    tree.Draw(form+" >> hEnTheta")
+
+    ytit = "Electron energy #it{E}_{e} / "+"{0:.1f} GeV".format(ebin)
+    xtit = "Scattering angle log_{10}(#theta_{e}) / "+"{0:.2f} rad".format(ltbin)
+    ut.put_yx_tit(hEnTheta, ytit, xtit, 1.4, 1.3)
+
+    hEnTheta.SetTitleOffset(1.5, "Z")
+    hEnTheta.SetZTitle("Event counts")
+
+    ut.set_margin_lbtr(gPad, 0.1, 0.1, 0.01, 0.15)
+
+    gPad.SetLogz()
+    gPad.SetGrid()
+
+    hEnTheta.SetMinimum(0.98)
+    hEnTheta.SetContour(300)
+
+    hEnTheta.Draw("colz")
+
+    ut.invert_col(rt.gPad)
+    can.SaveAs("01fig.pdf")
+
+#gen_el_en_log10_theta
+
+#_____________________________________________________________________________
+def gen_el_en_log10_theta_lQ2():
+
+    #electron energy, scattering angle and log10(Q^2)
+
+    #bins in log_10(theta)
+    ltbin = 0.2
+    ltmin = -8
+    ltmax = 1
+
+    #bins in energy
+    ebin = 0.4
+    emin = 0
+    emax = 21
+
+    #bins in Q2
+    lqbin = 0.1
+    lqmin = -9
+    lqmax = 2.5
+
+    can = ut.box_canvas()
+
+    hEnThetaQ2 = ut.prepare_TH3D("hEnThetaQ2", ltbin, ltmin, ltmax, ebin, emin, emax, lqbin, lqmin, lqmax)
+
+    form = "TMath::Log10(true_Q2):el_en:TMath::Log10(TMath::Pi()-el_theta)"
+    tree.Draw(form+" >> hEnThetaQ2")
+
+    pEnThetaQ2 = hEnThetaQ2.Project3DProfile("yx")
+
+    ytit = "Electron energy #it{E}_{e} / "+"{0:.1f} GeV".format(ebin)
+    xtit = "Scattering angle log_{10}(#theta_{e}) / "+"{0:.2f} rad".format(ltbin)
+    ut.put_yx_tit(pEnThetaQ2, ytit, xtit, 1.4, 1.3)
+
+    pEnThetaQ2.SetTitleOffset(1.3, "Z")
+    pEnThetaQ2.SetZTitle("log_{10}(#it{Q}^{2} (GeV^{2}))")
+    pEnThetaQ2.SetTitle("")
+
+    ut.set_margin_lbtr(gPad, 0.1, 0.1, 0.01, 0.15)
+
+    #gPad.SetLogz()
+    gPad.SetGrid()
+
+    pEnThetaQ2.SetMinimum(lqmin)
+    pEnThetaQ2.SetMaximum(lqmax)
+    pEnThetaQ2.SetContour(300)
+
+    pEnThetaQ2.Draw("colz")
+
+    ut.invert_col(rt.gPad)
+    can.SaveAs("01fig.pdf")
+
+#gen_el_en_log10_theta_lQ2
+
+#_____________________________________________________________________________
 if __name__ == "__main__":
 
     gROOT.SetBatch()
@@ -743,7 +945,8 @@ if __name__ == "__main__":
 
     main()
 
-
+    #beep when done
+    gSystem.Exec("mplayer computerbeep_1.mp3 > /dev/null 2>&1")
 
 
 

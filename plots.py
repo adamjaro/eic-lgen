@@ -142,6 +142,8 @@ def plot_dSigDe_all():
 
     gPad.SetLogy()
 
+    gPad.SetGrid()
+
     ut.invert_col(gPad)
     can.SaveAs("01fig.pdf")
 

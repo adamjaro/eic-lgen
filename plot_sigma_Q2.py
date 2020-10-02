@@ -1,7 +1,7 @@
 #!/usr/bin/python
 
 import ROOT as rt
-from ROOT import TF1, gPad, gROOT, gStyle, TFile
+from ROOT import TF1, gPad, gROOT, gStyle, TFile, gSystem
 
 import plot_utils as ut
 
@@ -14,13 +14,13 @@ def main():
 
     #sigma in micro barn
 
-    #g18x275 = make_sigma("../lgen/data/lgen_18x275_qr_Qe_beff2_5Mevt.root", 55.1)
-    #g10x100 = make_sigma("../lgen/data/lgen_10x100_qr_5Mevt.root", 44.8)
-    #g5x41 = make_sigma("../lgen/data/lgen_5x41_qr_5Mevt.root", 33.4)
+    g18x275 = make_sigma("../lgen/data/lgen_18x275_qr_Qe_beff2_5Mevt.root", 55.1)
+    g10x100 = make_sigma("../lgen/data/lgen_10x100_qr_5Mevt.root", 44.8)
+    g5x41 = make_sigma("../lgen/data/lgen_5x41_qr_5Mevt.root", 33.4)
 
-    g18x275 = make_sigma("../lgen/data/lgen_py_18x275_Q2all_5Mevt.root", 54.7)
-    g10x100 = make_sigma("../lgen/data/lgen_py_10x100_Q2all_5Mevt.root", 40.9)
-    g5x41 = make_sigma("../lgen/data/lgen_py_5x41_Q2all_5Mevt.root", 28.4)
+    #g18x275 = make_sigma("../lgen/data/lgen_py_18x275_Q2all_5Mevt.root", 54.7)
+    #g10x100 = make_sigma("../lgen/data/lgen_py_10x100_Q2all_5Mevt.root", 40.9)
+    #g5x41 = make_sigma("../lgen/data/lgen_py_5x41_Q2all_5Mevt.root", 28.4)
 
     can = ut.box_canvas()
     frame = gPad.DrawFrame(lqmin, 0, lqmax, smax)
@@ -46,7 +46,9 @@ def main():
     leg.AddEntry(g5x41, "5 #times 41 GeV", "l")
     leg.Draw("same")
 
-    ut.invert_col(rt.gPad)
+    gPad.SetGrid()
+
+    #ut.invert_col(rt.gPad)
     can.SaveAs("01fig.pdf")
 
 #main
@@ -84,7 +86,8 @@ if __name__ == "__main__":
 
     main()
 
-
+    #beep when finished
+    gSystem.Exec("mplayer computerbeep_1.mp3 > /dev/null 2>&1")
 
 
 
